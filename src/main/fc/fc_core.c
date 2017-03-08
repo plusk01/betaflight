@@ -54,24 +54,18 @@
 
 #include "msp/msp_serial.h"
 
-#include "io/beeper.h"
-#include "io/gps.h"
 #include "io/motors.h"
 #include "io/serial.h"
 #include "io/statusindicator.h"
-#include "io/asyncfatfs/asyncfatfs.h"
 
 #include "rx/rx.h"
 
 #include "scheduler/scheduler.h"
 
-#include "telemetry/telemetry.h"
-
 #include "flight/altitudehold.h"
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
-#include "flight/navigation.h"
 #include "flight/pid.h"
 #include "flight/servos.h"
 
@@ -161,8 +155,6 @@ void mwDisarm(void)
 
     if (ARMING_FLAG(ARMED)) {
         DISABLE_ARMING_FLAG(ARMED);
-
-        beeper(BEEPER_DISARMING);      // emit disarm tone
     }
 }
 
@@ -193,21 +185,9 @@ void mwArm(void)
             disarmAt = millis() + armingConfig()->auto_disarm_delay * 1000;   // start disarm timeout, will be extended when throttle is nonzero
 
             //beep to indicate arming
-#ifdef GPS
-            if (feature(FEATURE_GPS) && STATE(GPS_FIX) && GPS_numSat >= 5)
-                beeper(BEEPER_ARMING_GPS_FIX);
-            else
-                beeper(BEEPER_ARMING);
-#else
-            beeper(BEEPER_ARMING);
-#endif
 
             return;
         }
-    }
-
-    if (!ARMING_FLAG(ARMED)) {
-        beeperConfirmationBeeps(1);
     }
 }
 
@@ -226,11 +206,6 @@ void handleInflightCalibrationStickPosition(void)
         AccInflightCalibrationSavetoEEProm = true;
     } else {
         AccInflightCalibrationArmed = !AccInflightCalibrationArmed;
-        if (AccInflightCalibrationArmed) {
-            beeper(BEEPER_ACC_CALIBRATION);
-        } else {
-            beeper(BEEPER_ACC_CALIBRATION_FAIL);
-        }
     }
 }
 
@@ -267,7 +242,6 @@ void updateMagHold(void)
 
 void processRx(timeUs_t currentTimeUs)
 {
-    static bool armedBeeperOn = false;
     static bool airmodeIsActivated;
 
     calculateRxChannelsAndUpdateFailsafe(currentTimeUs);
@@ -325,11 +299,8 @@ void processRx(timeUs_t currentTimeUs)
                 ) {
                     // auto-disarm configured and delay is over
                     mwDisarm();
-                    armedBeeperOn = false;
                 } else {
                     // still armed; do warning beeps while armed
-                    beeper(BEEPER_ARMED);
-                    armedBeeperOn = true;
                 }
             } else {
                 // throttle is not low
@@ -338,19 +309,10 @@ void processRx(timeUs_t currentTimeUs)
                     disarmAt = millis() + armingConfig()->auto_disarm_delay * 1000;
                 }
 
-                if (armedBeeperOn) {
-                    beeperSilence();
-                    armedBeeperOn = false;
-                }
             }
         } else {
             // arming is via AUX switch; beep while throttle low
             if (throttleStatus == THROTTLE_LOW) {
-                beeper(BEEPER_ARMED);
-                armedBeeperOn = true;
-            } else if (armedBeeperOn) {
-                beeperSilence();
-                armedBeeperOn = false;
             }
         }
     }
@@ -421,12 +383,6 @@ void processRx(timeUs_t currentTimeUs)
     }
 #endif
 
-#ifdef GPS
-    if (sensors(SENSOR_GPS)) {
-        updateGpsWaypointsAndMode();
-    }
-#endif
-
     if (IS_RC_MODE_ACTIVE(BOXPASSTHRU)) {
         ENABLE_FLIGHT_MODE(PASSTHRU_MODE);
     } else {
@@ -437,23 +393,6 @@ void processRx(timeUs_t currentTimeUs)
         DISABLE_FLIGHT_MODE(HEADFREE_MODE);
     }
 
-#ifdef TELEMETRY
-    if (feature(FEATURE_TELEMETRY)) {
-        if ((!telemetryConfig()->telemetry_switch && ARMING_FLAG(ARMED)) ||
-                (telemetryConfig()->telemetry_switch && IS_RC_MODE_ACTIVE(BOXTELEMETRY))) {
-
-            releaseSharedTelemetryPorts();
-        } else {
-            // the telemetry state must be checked immediately so that shared serial ports are released.
-            telemetryCheckState();
-            mspSerialAllocatePorts();
-        }
-    }
-#endif
-
-#ifdef VTX
-    vtxUpdateActivatedChannel();
-#endif
 }
 
 static void subTaskPidController(void)
@@ -512,18 +451,6 @@ static void subTaskMainSubprocesses(timeUs_t currentTimeUs)
     }
 
     processRcCommand();
-
-#ifdef GPS
-    if (sensors(SENSOR_GPS)) {
-        if ((FLIGHT_MODE(GPS_HOME_MODE) || FLIGHT_MODE(GPS_HOLD_MODE)) && STATE(GPS_FIX_HOME)) {
-            updateGpsStateForHomeAndHoldMode();
-        }
-    }
-#endif
-
-#ifdef USE_SDCARD
-    afatfs_poll();
-#endif
 
     UNUSED(currentTimeUs);
 

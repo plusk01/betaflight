@@ -38,7 +38,6 @@
 #include "drivers/dma.h"
 #include "drivers/io.h"
 #include "drivers/light_led.h"
-#include "drivers/sound_beeper.h"
 #include "drivers/timer.h"
 #include "drivers/serial.h"
 #include "drivers/serial_softserial.h"
@@ -52,9 +51,6 @@
 #include "drivers/bus_i2c.h"
 #include "drivers/bus_spi.h"
 #include "drivers/inverter.h"
-#include "drivers/flash_m25p16.h"
-#include "drivers/sonar_hcsr04.h"
-#include "drivers/sdcard.h"
 #include "drivers/usb_io.h"
 #include "drivers/exti.h"
 
@@ -75,13 +71,8 @@
 #include "rx/rx.h"
 #include "rx/spektrum.h"
 
-#include "io/beeper.h"
 #include "io/serial.h"
-#include "io/flashfs.h"
-#include "io/gps.h"
 #include "io/motors.h"
-#include "io/gimbal.h"
-#include "io/asyncfatfs/asyncfatfs.h"
 
 #include "scheduler/scheduler.h"
 
@@ -94,14 +85,10 @@
 #include "sensors/gyro.h"
 #include "sensors/initialisation.h"
 #include "sensors/sensors.h"
-#include "sensors/sonar.h"
-
-#include "telemetry/telemetry.h"
 
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
-#include "flight/navigation.h"
 #include "flight/pid.h"
 #include "flight/servos.h"
 
@@ -256,9 +243,6 @@ void init(void)
 #endif
 
     mixerInit(mixerConfig()->mixerMode);
-#ifdef USE_SERVOS
-    servosInit();
-#endif
 
     uint16_t idlePulse = motorConfig()->mincommand;
     if (feature(FEATURE_3D)) {
@@ -273,14 +257,6 @@ void init(void)
     mixerConfigureOutput();
     motorDevInit(&motorConfig()->dev, idlePulse, getMotorCount());
 
-#ifdef USE_SERVOS
-    servoConfigureOutput();
-    if (isMixerUsingServos()) {
-        //pwm_params.useChannelForwarding = feature(FEATURE_CHANNEL_FORWARDING);
-        servoDevInit(&servoConfig()->dev);
-    }
-#endif
-
 #if defined(USE_PWM) || defined(USE_PPM)
     if (feature(FEATURE_RX_PPM)) {
         ppmRxInit(ppmConfig(), motorConfig()->dev.motorPwmProtocol);
@@ -291,9 +267,6 @@ void init(void)
 
     systemState |= SYSTEM_STATE_MOTORS_READY;
 
-#ifdef BEEPER
-    beeperInit(beeperDevConfig());
-#endif
 /* temp until PGs are implemented. */
 #ifdef USE_INVERTER
     initInverters();
@@ -343,18 +316,6 @@ void init(void)
     updateHardwareRevision();
 #endif
 
-#if defined(SONAR_SOFTSERIAL2_EXCLUSIVE) && defined(SONAR) && defined(USE_SOFTSERIAL2)
-    if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
-        serialRemovePort(SERIAL_PORT_SOFTSERIAL2);
-    }
-#endif
-
-#if defined(SONAR_SOFTSERIAL1_EXCLUSIVE) && defined(SONAR) && defined(USE_SOFTSERIAL1)
-    if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
-        serialRemovePort(SERIAL_PORT_SOFTSERIAL1);
-    }
-#endif
-
 #ifdef USE_ADC
     /* these can be removed from features! */
     adcConfigMutable()->vbat.enabled = feature(FEATURE_VBAT);
@@ -379,10 +340,8 @@ void init(void)
     for (int i = 0; i < 10; i++) {
         LED1_TOGGLE;
         LED0_TOGGLE;
-        delay(25);
-        if (!(getBeeperOffMask() & (1 << (BEEPER_SYSTEM_INIT - 1)))) BEEP_ON;
-        delay(25);
-        BEEP_OFF;
+        delay(50);
+
     }
     LED0_OFF;
     LED1_OFF;
@@ -403,19 +362,6 @@ void init(void)
 
     rxInit();
 
-#ifdef GPS
-    if (feature(FEATURE_GPS)) {
-        gpsInit();
-        navigationInit();
-    }
-#endif
-
-#ifdef TELEMETRY
-    if (feature(FEATURE_TELEMETRY)) {
-        telemetryInit();
-    }
-#endif
-
 #ifdef USE_ESC_SENSOR
     if (feature(FEATURE_ESC_SENSOR)) {
         escSensorInit();
@@ -426,22 +372,10 @@ void init(void)
     usbCableDetectInit();
 #endif
 
-#ifdef USE_FLASHFS
-    if (blackboxConfig()->device == BLACKBOX_DEVICE_FLASH) {
-#if defined(USE_FLASH_M25P16)
-        m25p16_init(flashConfig());
-#endif
-        flashfsInit();
-    }
-#endif
-
     if (mixerConfig()->mixerMode == MIXER_GIMBAL) {
         accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
     }
     gyroSetCalibrationCycles();
-#ifdef BARO
-    baroSetCalibrationCycles(CALIBRATING_BARO_CYCLES);
-#endif
 
     // start all timers
     // TODO - not implemented yet

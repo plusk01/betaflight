@@ -29,10 +29,6 @@
 
 #include "io/serial.h"
 
-#ifdef TELEMETRY
-#include "telemetry/telemetry.h"
-#endif
-
 #include "rx/rx.h"
 #include "rx/sumd.h"
 
@@ -173,11 +169,7 @@ bool sumdInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig)
         return false;
     }
 
-#ifdef TELEMETRY
-    bool portShared = telemetryCheckRxPortShared(portConfig);
-#else
     bool portShared = false;
-#endif
 
     serialPort_t *sumdPort = openSerialPort(portConfig->identifier, 
         FUNCTION_RX_SERIAL, 
@@ -186,12 +178,6 @@ bool sumdInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig)
         portShared ? MODE_RXTX : MODE_RX, 
         SERIAL_NOT_INVERTED | (rxConfig->halfDuplex ? SERIAL_BIDIR : 0)
         );
-
-#ifdef TELEMETRY
-    if (portShared) {
-        telemetrySharedPort = sumdPort;
-    }
-#endif
 
     return sumdPort != NULL;
 }

@@ -37,8 +37,6 @@
 #include "fc/rc_controls.h"
 #include "fc/runtime_config.h"
 
-#include "io/beeper.h"
-
 #include "sensors/battery.h"
 #include "sensors/esc_sensor.h"
 
@@ -137,19 +135,6 @@ static void updateBatteryVoltage(void)
 
 static void updateBatteryAlert(void)
 {
-    switch(getBatteryState()) {
-        case BATTERY_WARNING:
-            beeper(BEEPER_BAT_LOW);
-
-            break;
-        case BATTERY_CRITICAL:
-            beeper(BEEPER_BAT_CRIT_LOW);
-
-            break;
-        case BATTERY_OK:
-        case BATTERY_NOT_PRESENT:
-            break;
-    }
 }
 
 void updateBattery(void)

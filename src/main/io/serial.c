@@ -50,10 +50,6 @@
 
 #include "msp/msp_serial.h"
 
-#ifdef TELEMETRY
-#include "telemetry/telemetry.h"
-#endif
-
 static serialPortUsage_t serialPortUsageList[SERIAL_PORT_COUNT];
 
 const serialPortIdentifier_e serialPortIdentifiers[SERIAL_PORT_COUNT] = {
@@ -239,13 +235,6 @@ serialPort_t *findNextSharedSerialPort(uint16_t functionMask, serialPortFunction
     return NULL;
 }
 
-#ifdef TELEMETRY
-#define ALL_TELEMETRY_FUNCTIONS_MASK (TELEMETRY_SHAREABLE_PORT_FUNCTIONS_MASK | FUNCTION_TELEMETRY_HOTT | FUNCTION_TELEMETRY_SMARTPORT)
-#define ALL_FUNCTIONS_SHARABLE_WITH_MSP (FUNCTION_BLACKBOX | ALL_TELEMETRY_FUNCTIONS_MASK)
-#else
-#define ALL_FUNCTIONS_SHARABLE_WITH_MSP (FUNCTION_BLACKBOX)
-#endif
-
 bool isSerialConfigValid(const serialConfig_t *serialConfigToCheck)
 {
     UNUSED(serialConfigToCheck);
@@ -274,16 +263,12 @@ bool isSerialConfigValid(const serialConfig_t *serialConfigToCheck)
                 return false;
             }
 
-            if ((portConfig->functionMask & FUNCTION_MSP) && (portConfig->functionMask & ALL_FUNCTIONS_SHARABLE_WITH_MSP)) {
-                // MSP & telemetry
-#ifdef TELEMETRY
-            } else if (telemetryCheckRxPortShared(portConfig)) {
-                // serial RX & telemetry
-#endif
-            } else {
-                // some other combination
-                return false;
-            }
+            // if ((portConfig->functionMask & FUNCTION_MSP) && (portConfig->functionMask & ALL_FUNCTIONS_SHARABLE_WITH_MSP)) {
+            //     // MSP & telemetry
+            // } else {
+            //     // some other combination
+            //     return false;
+            // }
         }
     }
 

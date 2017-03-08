@@ -40,8 +40,6 @@
 #include "fc/fc_rc.h"
 #include "fc/runtime_config.h"
 
-#include "io/gps.h"
-#include "io/beeper.h"
 #include "io/motors.h"
 
 #include "sensors/barometer.h"
@@ -53,7 +51,6 @@
 #include "rx/rx.h"
 
 #include "flight/pid.h"
-#include "flight/navigation.h"
 #include "flight/failsafe.h"
 
 
@@ -173,7 +170,6 @@ void processRcStickPositions(throttleStatus_e throttleStatus)
             if (ARMING_FLAG(ARMED))
                 mwDisarm();
             else {
-                beeper(BEEPER_DISARM_REPEAT);    // sound tone while stick held
                 rcDelayCommand = 0;              // reset so disarm tone will repeat
             }
         }

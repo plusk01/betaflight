@@ -101,7 +101,7 @@ HSE_VALUE       ?= 8000000
 # used for turning on features like VCP and SDCARD
 FEATURES        =
 
-OFFICIAL_TARGETS  = ALIENFLIGHTF3 ALIENFLIGHTF4 ANYFCF7 BETAFLIGHTF3 BLUEJAYF4 CC3D FURYF4 NAZE REVO SIRINFPV SPARKY SPRACINGF3 SPRACINGF3EVO STM32F3DISCOVERY
+OFFICIAL_TARGETS  = SPRACINGF3EVO
 ALT_TARGETS       = $(sort $(filter-out target, $(basename $(notdir $(wildcard $(ROOT)/src/main/target/*/*.mk)))))
 OPBL_TARGETS      = $(filter %_OPBL, $(ALT_TARGETS))
 
@@ -217,13 +217,6 @@ VPATH           := $(VPATH):$(USBFS_DIR)/src
 
 DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC)\
                         $(USBPERIPH_SRC)
-endif
-
-ifneq ($(filter SDCARD, $(FEATURES)),)
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(FATFS_DIR) \
-
-VPATH           := $(VPATH):$(FATFS_DIR)
 endif
 
 LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f303_$(FLASH_SIZE)k.ld
@@ -590,7 +583,6 @@ COMMON_SRC = \
             drivers/serial.c \
             drivers/serial_uart.c \
             drivers/serial_softserial.c \
-            drivers/sound_beeper.c \
             drivers/stack_check.c \
             drivers/system.c \
             drivers/timer.c \
@@ -613,7 +605,6 @@ COMMON_SRC = \
             flight/mixer.c \
             flight/pid.c \
             flight/servos.c \
-            io/beeper.c \
             io/serial.c \
             io/serial_4way.c \
             io/serial_4way_avrootloader.c \
@@ -621,7 +612,6 @@ COMMON_SRC = \
             io/statusindicator.c \
             msp/msp_serial.c \
             rx/ibus.c \
-            rx/jetiexbus.c \
             rx/msp.c \
             rx/nrf24_cx10.c \
             rx/nrf24_inav.c \
@@ -646,24 +636,21 @@ COMMON_SRC = \
             sensors/gyroanalyse.c \
             sensors/initialisation.c \
             common/colorconversion.c \
-            common/gps_conversion.c \
             drivers/serial_escserial.c \
-            flight/navigation.c \
-            io/gps.c \
-            sensors/sonar.c \
             sensors/barometer.c \
-            telemetry/telemetry.c \
-            telemetry/crsf.c \
-            telemetry/srxl.c \
-            telemetry/frsky.c \
-            telemetry/hott.c \
-            telemetry/smartport.c \
-            telemetry/ltm.c \
-            telemetry/mavlink.c \
-            telemetry/ibus.c \
             sensors/esc_sensor.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC)
+
+            # telemetry/telemetry.c \
+            # telemetry/crsf.c \
+            # telemetry/srxl.c \
+            # telemetry/frsky.c \
+            # telemetry/hott.c \
+            # telemetry/smartport.c \
+            # telemetry/ltm.c \
+            # telemetry/mavlink.c \
+            # telemetry/ibus.c \
 
 
 SPEED_OPTIMISED_SRC := ""
@@ -693,7 +680,6 @@ SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
             drivers/rx_pwm.c \
             drivers/serial.c \
             drivers/serial_uart.c \
-            drivers/sound_beeper.c \
             drivers/system.c \
             drivers/timer.c \
             fc/fc_core.c \
@@ -707,7 +693,6 @@ SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
             flight/servos.c \
             io/serial.c \
             rx/ibus.c \
-            rx/jetiexbus.c \
             rx/nrf24_cx10.c \
             rx/nrf24_inav.c \
             rx/nrf24_h8_3d.c \
@@ -866,27 +851,7 @@ TARGET_SRC += $(DSPLIB)/Source/StatisticsFunctions/arm_max_f32.c
 TARGET_SRC += $(wildcard $(DSPLIB)/Source/*/*.S)
 endif
 
-
-ifneq ($(filter ONBOARDFLASH,$(FEATURES)),)
-TARGET_SRC += \
-            drivers/flash_m25p16.c \
-            io/flashfs.c
-endif
-
 TARGET_SRC += $(COMMON_SRC)
-
-#excludes
-ifeq ($(TARGET),$(filter $(TARGET),$(F7_TARGETS)))
-TARGET_SRC   := $(filter-out ${F7EXCLUDES}, $(TARGET_SRC))
-endif
-
-ifneq ($(filter SDCARD,$(FEATURES)),)
-TARGET_SRC += \
-            drivers/sdcard.c \
-            drivers/sdcard_standard.c \
-            io/asyncfatfs/asyncfatfs.c \
-            io/asyncfatfs/fat_standard.c
-endif
 
 ifneq ($(filter VCP,$(FEATURES)),)
 TARGET_SRC += $(VCP_SRC)

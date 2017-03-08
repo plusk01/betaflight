@@ -55,7 +55,6 @@
 
 #include "fc/runtime_config.h"
 
-#include "io/beeper.h"
 #include "io/statusindicator.h"
 
 #include "scheduler/scheduler.h"
@@ -457,7 +456,6 @@ STATIC_UNIT_TESTED void performGyroCalibration(gyroDev_t *gyroDev, uint8_t gyroM
 
     if (isOnFinalGyroCalibrationCycle()) {
         schedulerResetTaskStatistics(TASK_SELF); // so calibration cycles do not pollute tasks statistics
-        beeper(BEEPER_GYRO_CALIBRATED);
     }
     calibratingG--;
 

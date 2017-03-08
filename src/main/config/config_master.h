@@ -24,12 +24,7 @@
 
 #include "drivers/adc.h"
 #include "drivers/rx_pwm.h"
-#include "drivers/sound_beeper.h"
-#include "drivers/sonar_hcsr04.h"
-#include "drivers/sdcard.h"
-#include "drivers/vcd.h"
 #include "drivers/light_led.h"
-#include "drivers/flash.h"
 #include "drivers/serial.h"
 
 #include "fc/config.h"
@@ -43,17 +38,11 @@
 #include "flight/mixer.h"
 #include "flight/servos.h"
 #include "flight/imu.h"
-#include "flight/navigation.h"
 #include "flight/pid.h"
 
-#include "io/beeper.h"
-#include "io/gimbal.h"
-#include "io/gps.h"
 #include "io/serial.h"
 
 #include "rx/rx.h"
-
-#include "telemetry/telemetry.h"
 
 #include "sensors/sensors.h"
 #include "sensors/gyro.h"
@@ -70,7 +59,6 @@
 #define flight3DConfig(x) (&masterConfig.flight3DConfig)
 #define servoConfig(x) (&masterConfig.servoConfig)
 #define servoMixerConfig(x) (&masterConfig.servoMixerConfig)
-#define gimbalConfig(x) (&masterConfig.gimbalConfig)
 #define boardAlignment(x) (&masterConfig.boardAlignment)
 #define imuConfig(x) (&masterConfig.imuConfig)
 #define gyroConfig(x) (&masterConfig.gyroConfig)
@@ -80,8 +68,6 @@
 #define throttleCorrectionConfig(x) (&masterConfig.throttleCorrectionConfig)
 #define batteryConfig(x) (&masterConfig.batteryConfig)
 #define rcControlsConfig(x) (&masterConfig.rcControlsConfig)
-#define navigationConfig(x) (&masterConfig.navigationConfig)
-#define gpsConfig(x) (&masterConfig.gpsConfig)
 #define rxConfig(x) (&masterConfig.rxConfig)
 #define armingConfig(x) (&masterConfig.armingConfig)
 #define mixerConfig(x) (&masterConfig.mixerConfig)
@@ -89,24 +75,16 @@
 #define failsafeConfig(x) (&masterConfig.failsafeConfig)
 #define serialPinConfig(x) (&masterConfig.serialPinConfig)
 #define serialConfig(x) (&masterConfig.serialConfig)
-#define telemetryConfig(x) (&masterConfig.telemetryConfig)
-#define ibusTelemetryConfig(x) (&masterConfig.telemetryConfig)
 #define ppmConfig(x) (&masterConfig.ppmConfig)
 #define pwmConfig(x) (&masterConfig.pwmConfig)
 #define adcConfig(x) (&masterConfig.adcConfig)
-#define beeperDevConfig(x) (&masterConfig.beeperDevConfig)
-#define sonarConfig(x) (&masterConfig.sonarConfig)
 #define statusLedConfig(x) (&masterConfig.statusLedConfig)
-#define vcdProfile(x) (&masterConfig.vcdProfile)
-#define sdcardConfig(x) (&masterConfig.sdcardConfig)
-#define flashConfig(x) (&masterConfig.flashConfig)
 #define pidConfig(x) (&masterConfig.pidConfig)
 #define adjustmentProfile(x) (&masterConfig.adjustmentProfile)
 #define modeActivationProfile(x) (&masterConfig.modeActivationProfile)
 #define servoProfile(x) (&masterConfig.servoProfile)
 #define customMotorMixer(i) (&masterConfig.customMotorMixer[i])
 #define customServoMixers(i) (&masterConfig.customServoMixer[i])
-#define beeperConfig(x) (&masterConfig.beeperConfig)
 
 #define featureConfigMutable(x) (&masterConfig.featureConfig)
 #define systemConfigMutable(x) (&masterConfig.systemConfig)
@@ -114,7 +92,6 @@
 #define flight3DConfigMutable(x) (&masterConfig.flight3DConfig)
 #define servoConfigMutable(x) (&masterConfig.servoConfig)
 #define servoMixerConfigMutable(x) (&masterConfig.servoMixerConfig)
-#define gimbalConfigMutable(x) (&masterConfig.gimbalConfig)
 #define boardAlignmentMutable(x) (&masterConfig.boardAlignment)
 #define imuConfigMutable(x) (&masterConfig.imuConfig)
 #define gyroConfigMutable(x) (&masterConfig.gyroConfig)
@@ -124,26 +101,16 @@
 #define throttleCorrectionConfigMutable(x) (&masterConfig.throttleCorrectionConfig)
 #define batteryConfigMutable(x) (&masterConfig.batteryConfig)
 #define rcControlsConfigMutable(x) (&masterConfig.rcControlsConfig)
-#define navigationConfigMutable(x) (&masterConfig.navigationConfig)
-#define gpsConfigMutable(x) (&masterConfig.gpsConfig)
 #define rxConfigMutable(x) (&masterConfig.rxConfig)
 #define armingConfigMutable(x) (&masterConfig.armingConfig)
 #define mixerConfigMutable(x) (&masterConfig.mixerConfig)
 #define airplaneConfigMutable(x) (&masterConfig.airplaneConfig)
 #define failsafeConfigMutable(x) (&masterConfig.failsafeConfig)
 #define serialConfigMutable(x) (&masterConfig.serialConfig)
-#define telemetryConfigMutable(x) (&masterConfig.telemetryConfig)
-#define ibusTelemetryConfigMutable(x) (&masterConfig.telemetryConfig)
 #define ppmConfigMutable(x) (&masterConfig.ppmConfig)
 #define pwmConfigMutable(x) (&masterConfig.pwmConfig)
 #define adcConfigMutable(x) (&masterConfig.adcConfig)
-#define beeperDevConfigMutable(x) (&masterConfig.beeperDevConfig)
-#define sonarConfigMutable(x) (&masterConfig.sonarConfig)
 #define statusLedConfigMutable(x) (&masterConfig.statusLedConfig)
-#define osdConfigMutable(x) (&masterConfig.osdConfig)
-#define vcdProfileMutable(x) (&masterConfig.vcdProfile)
-#define sdcardConfigMutable(x) (&masterConfig.sdcardConfig)
-#define blackboxConfigMutable(x) (&masterConfig.blackboxConfig)
 #define flashConfigMutable(x) (&masterConfig.flashConfig)
 #define pidConfigMutable(x) (&masterConfig.pidConfig)
 #define adjustmentProfileMutable(x) (&masterConfig.adjustmentProfile)
@@ -151,7 +118,6 @@
 #define servoProfileMutable(x) (&masterConfig.servoProfile)
 #define customMotorMixerMutable(i) (&masterConfig.customMotorMixer[i])
 #define customServoMixersMutable(i) (&masterConfig.customServoMixer[i])
-#define beeperConfigMutable(x) (&masterConfig.beeperConfig)
 
 #define servoParams(i) (&servoProfile()->servoConf[i])
 #define adjustmentRanges(i) (&adjustmentProfile()->adjustmentRanges[i])
@@ -187,8 +153,6 @@ typedef struct master_s {
     servoMixer_t customServoMixer[MAX_SERVO_RULES];
     // Servo-related stuff
     servoProfile_t servoProfile;
-    // gimbal-related configuration
-    gimbalConfig_t gimbalConfig;
 #endif
 
     boardAlignment_t boardAlignment;
@@ -211,11 +175,6 @@ typedef struct master_s {
     // Radio/ESC-related configuration
     rcControlsConfig_t rcControlsConfig;
 
-#ifdef GPS
-    navigationConfig_t navigationConfig;
-    gpsConfig_t gpsConfig;
-#endif
-
     rxConfig_t rxConfig;
 
     armingConfig_t armingConfig;
@@ -227,7 +186,6 @@ typedef struct master_s {
     failsafeConfig_t failsafeConfig;
     serialPinConfig_t serialPinConfig;
     serialConfig_t serialConfig;
-    telemetryConfig_t telemetryConfig;
 
     statusLedConfig_t statusLedConfig;
 
@@ -243,32 +201,11 @@ typedef struct master_s {
     adcConfig_t adcConfig;
 #endif
 
-#ifdef BEEPER
-    beeperDevConfig_t beeperDevConfig;
-#endif
-
-#ifdef SONAR
-    sonarConfig_t sonarConfig;
-#endif
-
-#ifdef USE_SDCARD
-    sdcardConfig_t sdcardConfig;
-#endif
-
     profile_t profile[MAX_PROFILE_COUNT];
     controlRateConfig_t controlRateProfile[CONTROL_RATE_PROFILE_COUNT];
 
     modeActivationProfile_t modeActivationProfile;
     adjustmentProfile_t adjustmentProfile;
-#if defined(USE_RTC6705) || defined(VTX)
-    vtxConfig_t vtxConfig;
-#endif
-
-#ifdef USE_FLASHFS
-    flashConfig_t flashConfig;
-#endif
-
-    beeperConfig_t beeperConfig;
 
     uint8_t chk;                            // XOR checksum
     /*

@@ -35,10 +35,6 @@
 
 #include "io/serial.h"
 
-#ifdef TELEMETRY
-#include "telemetry/telemetry.h"
-#endif
-
 #include "rx/rx.h"
 #include "rx/sumh.h"
 
@@ -127,19 +123,9 @@ bool sumhInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig)
         return false;
     }
 
-#ifdef TELEMETRY
-    bool portShared = telemetryCheckRxPortShared(portConfig);
-#else
     bool portShared = false;
-#endif
 
     sumhPort = openSerialPort(portConfig->identifier, FUNCTION_RX_SERIAL, sumhDataReceive, SUMH_BAUDRATE, portShared ? MODE_RXTX : MODE_RX, SERIAL_NOT_INVERTED);
-
-#ifdef TELEMETRY
-    if (portShared) {
-        telemetrySharedPort = sumhPort;
-    }
-#endif
 
     return sumhPort != NULL;
 }

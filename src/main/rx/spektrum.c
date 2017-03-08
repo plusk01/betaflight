@@ -36,10 +36,6 @@
 #include "fc/config.h"
 #include "fc/fc_dispatch.h"
 
-#ifdef TELEMETRY
-#include "telemetry/telemetry.h"
-#endif
-
 #include "rx/rx.h"
 #include "rx/spektrum.h"
 
@@ -266,17 +262,11 @@ bool spektrumInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig
     }
 
     srxlEnabled = false;
-#ifdef TELEMETRY
-    bool portShared = telemetryCheckRxPortShared(portConfig);
-#else
     bool portShared = false;
-#endif
+
 
     switch (rxConfig->serialrx_provider) {
     case SERIALRX_SRXL:
-#ifdef TELEMETRY
-        srxlEnabled = (feature(FEATURE_TELEMETRY) && !portShared && rxConfig->serialrx_provider == SERIALRX_SRXL);
-#endif
     case SERIALRX_SPEKTRUM2048:
         // 11 bit frames
         spek_chan_shift = 3;
@@ -306,11 +296,6 @@ bool spektrumInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig
         SERIAL_NOT_INVERTED | ((srxlEnabled || rxConfig->halfDuplex) ? SERIAL_BIDIR : 0)
         );
 
-#ifdef TELEMETRY
-    if (portShared) {
-        telemetrySharedPort = serialPort;
-    }
-#endif
 
     rssi_channel = rxConfig->rssi_channel - 1; // -1 because rxConfig->rssi_channel is 1-based and rssi_channel is 0-based.
     if (rssi_channel >= rxRuntimeConfig->channelCount) {

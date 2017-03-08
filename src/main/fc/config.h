@@ -23,12 +23,8 @@
 #include "config/parameter_group.h"
 
 #include "drivers/adc.h"
-#include "drivers/flash.h"
 #include "drivers/rx_pwm.h"
-#include "drivers/sdcard.h"
 #include "drivers/serial.h"
-#include "drivers/sound_beeper.h"
-#include "drivers/vcd.h"
 
 #define MAX_NAME_LENGTH 16
 
@@ -73,25 +69,12 @@ typedef struct systemConfig_s {
 
 PG_DECLARE(systemConfig_t, systemConfig);
 PG_DECLARE(adcConfig_t, adcConfig);
-PG_DECLARE(beeperDevConfig_t, beeperDevConfig);
-PG_DECLARE(flashConfig_t, flashConfig);
 PG_DECLARE(ppmConfig_t, ppmConfig);
 PG_DECLARE(pwmConfig_t, pwmConfig);
-PG_DECLARE(vcdProfile_t, vcdProfile);
-PG_DECLARE(sdcardConfig_t, sdcardConfig);
 PG_DECLARE(serialPinConfig_t, serialPinConfig);
 
 struct pidProfile_s;
 extern struct pidProfile_s *currentPidProfile;
-
-void beeperOffSet(uint32_t mask);
-void beeperOffSetAll(uint8_t beeperCount);
-void beeperOffClear(uint32_t mask);
-void beeperOffClearAll(void);
-uint32_t getBeeperOffMask(void);
-void setBeeperOffMask(uint32_t mask);
-uint32_t getPreferredBeeperOffMask(void);
-void setPreferredBeeperOffMask(uint32_t mask);
 
 void initEEPROM(void);
 void resetEEPROM(void);

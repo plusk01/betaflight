@@ -43,7 +43,6 @@
 #include "flight/pid.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
-#include "flight/navigation.h"
 
 #include "sensors/gyro.h"
 #include "sensors/acceleration.h"
@@ -276,9 +275,6 @@ static float calcHorizonLevelStrength(void) {
 static float pidLevel(int axis, const pidProfile_t *pidProfile, const rollAndPitchTrims_t *angleTrim, float currentPidSetpoint) {
     // calculate error angle and limit the angle to the max inclination
     float errorAngle = pidProfile->levelSensitivity * getRcDeflection(axis);
-#ifdef GPS
-    errorAngle += GPS_angle[axis];
-#endif
     errorAngle = constrainf(errorAngle, -pidProfile->levelAngleLimit, pidProfile->levelAngleLimit);
     errorAngle = errorAngle - ((attitude.raw[axis] - angleTrim->raw[axis]) / 10.0f);
     if(FLIGHT_MODE(ANGLE_MODE)) {

@@ -41,14 +41,11 @@
 #include "drivers/accgyro.h"
 #include "drivers/bus_i2c.h"
 #include "drivers/compass.h"
-#include "drivers/flash.h"
 #include "drivers/io.h"
 #include "drivers/pwm_output.h"
-#include "drivers/sdcard.h"
 #include "drivers/serial.h"
 #include "drivers/serial_escserial.h"
 #include "drivers/system.h"
-#include "drivers/vcd.h"
 
 #include "fc/config.h"
 #include "fc/fc_core.h"
@@ -62,15 +59,9 @@
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
-#include "flight/navigation.h"
 #include "flight/pid.h"
 #include "flight/servos.h"
 
-#include "io/asyncfatfs/asyncfatfs.h"
-#include "io/beeper.h"
-#include "io/flashfs.h"
-#include "io/gimbal.h"
-#include "io/gps.h"
 #include "io/motors.h"
 #include "io/serial.h"
 #include "io/serial_4way.h"
@@ -91,9 +82,6 @@
 #include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
-#include "sensors/sonar.h"
-
-#include "telemetry/telemetry.h"
 
 #ifdef USE_HARDWARE_REVISION_DETECTION
 #include "hardware_revision.h"
@@ -354,21 +342,6 @@ void initActiveBoxIds(void)
 
     activeBoxIds[activeBoxIdCount++] = BOXBEEPERON;
 
-#ifdef LED_STRIP
-    if (feature(FEATURE_LED_STRIP)) {
-        activeBoxIds[activeBoxIdCount++] = BOXLEDLOW;
-    }
-#endif
-
-#ifdef BLACKBOX
-    if (feature(FEATURE_BLACKBOX)) {
-        activeBoxIds[activeBoxIdCount++] = BOXBLACKBOX;
-#ifdef USE_FLASHFS
-        activeBoxIds[activeBoxIdCount++] = BOXBLACKBOXERASE;
-#endif
-    }
-#endif
-
     activeBoxIds[activeBoxIdCount++] = BOXFPVANGLEMIX;
 
     if (feature(FEATURE_3D)) {
@@ -385,19 +358,6 @@ void initActiveBoxIds(void)
 
     activeBoxIds[activeBoxIdCount++] = BOXOSD;
 
-#ifdef TELEMETRY
-    if (feature(FEATURE_TELEMETRY) && telemetryConfig()->telemetry_switch) {
-        activeBoxIds[activeBoxIdCount++] = BOXTELEMETRY;
-    }
-#endif
-
-#ifdef USE_SERVOS
-    if (mixerConfig()->mixerMode == MIXER_CUSTOM_AIRPLANE) {
-        activeBoxIds[activeBoxIdCount++] = BOXSERVO1;
-        activeBoxIds[activeBoxIdCount++] = BOXSERVO2;
-        activeBoxIds[activeBoxIdCount++] = BOXSERVO3;
-    }
-#endif
 }
 
 #define IS_ENABLED(mask) (mask == 0 ? 0 : 1)
@@ -447,106 +407,20 @@ static uint32_t packFlightModeFlags(void)
 
 static void serializeSDCardSummaryReply(sbuf_t *dst)
 {
-#ifdef USE_SDCARD
-    uint8_t flags = MSP_SDCARD_FLAG_SUPPORTTED;
-    uint8_t state = 0;
-
-    sbufWriteU8(dst, flags);
-
-    // Merge the card and filesystem states together
-    if (!sdcard_isInserted()) {
-        state = MSP_SDCARD_STATE_NOT_PRESENT;
-    } else if (!sdcard_isFunctional()) {
-        state = MSP_SDCARD_STATE_FATAL;
-    } else {
-        switch (afatfs_getFilesystemState()) {
-        case AFATFS_FILESYSTEM_STATE_READY:
-            state = MSP_SDCARD_STATE_READY;
-
-            break;
-        case AFATFS_FILESYSTEM_STATE_INITIALIZATION:
-            if (sdcard_isInitialized()) {
-                state = MSP_SDCARD_STATE_FS_INIT;
-            } else {
-                state = MSP_SDCARD_STATE_CARD_INIT;
-            }
-
-            break;
-        case AFATFS_FILESYSTEM_STATE_FATAL:
-        case AFATFS_FILESYSTEM_STATE_UNKNOWN:
-        default:
-            state = MSP_SDCARD_STATE_FATAL;
-
-            break;
-        }
-    }
-
-    sbufWriteU8(dst, state);
-    sbufWriteU8(dst, afatfs_getLastError());
-    // Write free space and total space in kilobytes
-    sbufWriteU32(dst, afatfs_getContiguousFreeSpace() / 1024);
-    sbufWriteU32(dst, sdcard_getMetadata()->numBlocks / 2); // Block size is half a kilobyte
-#else
     sbufWriteU8(dst, 0);
     sbufWriteU8(dst, 0);
     sbufWriteU8(dst, 0);
     sbufWriteU32(dst, 0);
     sbufWriteU32(dst, 0);
-#endif
 }
 
 static void serializeDataflashSummaryReply(sbuf_t *dst)
 {
-#ifdef USE_FLASHFS
-    const flashGeometry_t *geometry = flashfsGetGeometry();
-    uint8_t flags = (flashfsIsReady() ? 1 : 0) | 2 /* FlashFS is supported */;
-
-    sbufWriteU8(dst, flags);
-    sbufWriteU32(dst, geometry->sectors);
-    sbufWriteU32(dst, geometry->totalSize);
-    sbufWriteU32(dst, flashfsGetOffset()); // Effectively the current number of bytes stored on the volume
-#else
     sbufWriteU8(dst, 0); // FlashFS is neither ready nor supported
     sbufWriteU32(dst, 0);
     sbufWriteU32(dst, 0);
     sbufWriteU32(dst, 0);
-#endif
 }
-
-#ifdef USE_FLASHFS
-static void serializeDataflashReadReply(sbuf_t *dst, uint32_t address, const uint16_t size, bool useLegacyFormat)
-{
-    BUILD_BUG_ON(MSP_PORT_DATAFLASH_INFO_SIZE < 16);
-
-    uint16_t readLen = size;
-    const int bytesRemainingInBuf = sbufBytesRemaining(dst) - MSP_PORT_DATAFLASH_INFO_SIZE;
-    if (readLen > bytesRemainingInBuf) {
-        readLen = bytesRemainingInBuf;
-    }
-    // size will be lower than that requested if we reach end of volume
-    if (readLen > flashfsGetSize() - address) {
-        // truncate the request
-        readLen = flashfsGetSize() - address;
-    }
-    sbufWriteU32(dst, address);
-    if (!useLegacyFormat) {
-        // new format supports variable read lengths
-        sbufWriteU16(dst, readLen);
-        sbufWriteU8(dst, 0); // placeholder for compression format
-    }
-
-    // bytesRead will equal readLen
-    const int bytesRead = flashfsReadAbs(address, sbufPtr(dst), readLen);
-    sbufAdvance(dst, bytesRead);
-
-    if (useLegacyFormat) {
-        // pad the buffer with zeros
-        for (int i = bytesRead; i < size; i++) {
-            sbufWriteU8(dst, 0);
-        }
-    }
-}
-#endif
 
 /*
  * Returns true if the command was processd, false otherwise.
@@ -813,16 +687,10 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
         sbufWriteU16(dst, motorConfig()->mincommand);
 
         sbufWriteU16(dst, failsafeConfig()->failsafe_throttle);
-
-#ifdef GPS
-        sbufWriteU8(dst, gpsConfig()->provider); // gps_type
-        sbufWriteU8(dst, 0); // TODO gps_baudrate (an index, cleanflight uses a uint32_t
-        sbufWriteU8(dst, gpsConfig()->sbasMode); // gps_ubx_sbas
-#else
         sbufWriteU8(dst, 0); // gps_type
         sbufWriteU8(dst, 0); // TODO gps_baudrate (an index, cleanflight uses a uint32_t
         sbufWriteU8(dst, 0); // gps_ubx_sbas
-#endif
+
         sbufWriteU8(dst, batteryConfig()->multiwiiCurrentMeterOutput);
         sbufWriteU8(dst, rxConfig()->rssi_channel);
         sbufWriteU8(dst, 0);
@@ -841,34 +709,6 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
             sbufWriteU8(dst, i + 1);
         }
         break;
-
-#ifdef GPS
-    case MSP_RAW_GPS:
-        sbufWriteU8(dst, STATE(GPS_FIX));
-        sbufWriteU8(dst, GPS_numSat);
-        sbufWriteU32(dst, GPS_coord[LAT]);
-        sbufWriteU32(dst, GPS_coord[LON]);
-        sbufWriteU16(dst, GPS_altitude);
-        sbufWriteU16(dst, GPS_speed);
-        sbufWriteU16(dst, GPS_ground_course);
-        break;
-
-    case MSP_COMP_GPS:
-        sbufWriteU16(dst, GPS_distanceToHome);
-        sbufWriteU16(dst, GPS_directionToHome);
-        sbufWriteU8(dst, GPS_update & 1);
-        break;
-
-    case MSP_GPSSVINFO:
-        sbufWriteU8(dst, GPS_numCh);
-           for (int i = 0; i < GPS_numCh; i++) {
-               sbufWriteU8(dst, GPS_svinfo_chn[i]);
-               sbufWriteU8(dst, GPS_svinfo_svid[i]);
-               sbufWriteU8(dst, GPS_svinfo_quality[i]);
-               sbufWriteU8(dst, GPS_svinfo_cno[i]);
-           }
-        break;
-#endif
 
     case MSP_DEBUG:
         // output some useful QA statistics
@@ -1089,48 +929,6 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
     return true;
 }
 
-#ifdef GPS
-static void mspFcWpCommand(sbuf_t *dst, sbuf_t *src)
-{
-    uint8_t wp_no;
-    int32_t lat = 0, lon = 0;
-    wp_no = sbufReadU8(src);    // get the wp number
-    if (wp_no == 0) {
-        lat = GPS_home[LAT];
-        lon = GPS_home[LON];
-    } else if (wp_no == 16) {
-        lat = GPS_hold[LAT];
-        lon = GPS_hold[LON];
-    }
-    sbufWriteU8(dst, wp_no);
-    sbufWriteU32(dst, lat);
-    sbufWriteU32(dst, lon);
-    sbufWriteU32(dst, AltHold);           // altitude (cm) will come here -- temporary implementation to test feature with apps
-    sbufWriteU16(dst, 0);                 // heading  will come here (deg)
-    sbufWriteU16(dst, 0);                 // time to stay (ms) will come here
-    sbufWriteU8(dst, 0);                  // nav flag will come here
-}
-#endif
-
-#ifdef USE_FLASHFS
-static void mspFcDataFlashReadCommand(sbuf_t *dst, sbuf_t *src)
-{
-    const unsigned int dataSize = sbufBytesRemaining(src);
-    const uint32_t readAddress = sbufReadU32(src);
-    uint16_t readLength;
-    bool useLegacyFormat;
-    if (dataSize >= sizeof(uint32_t) + sizeof(uint16_t)) {
-        readLength = sbufReadU16(src);
-        useLegacyFormat = false;
-    } else {
-        readLength = 128;
-        useLegacyFormat = true;
-    }
-
-    serializeDataflashReadReply(dst, readAddress, readLength, useLegacyFormat);
-}
-#endif
-
 static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
 {
     uint32_t i;
@@ -1279,15 +1077,10 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
 
         failsafeConfigMutable()->failsafe_throttle = sbufReadU16(src);
 
-#ifdef GPS
-        gpsConfigMutable()->provider = sbufReadU8(src); // gps_type
-        sbufReadU8(src); // gps_baudrate
-        gpsConfigMutable()->sbasMode = sbufReadU8(src); // gps_ubx_sbas
-#else
         sbufReadU8(src); // gps_type
         sbufReadU8(src); // gps_baudrate
         sbufReadU8(src); // gps_ubx_sbas
-#endif
+
         batteryConfigMutable()->multiwiiCurrentMeterOutput = sbufReadU8(src);
         rxConfigMutable()->rssi_channel = sbufReadU8(src);
         sbufReadU8(src);
@@ -1304,45 +1097,6 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         for (int i = 0; i < 8; i++) { // FIXME should this use MAX_MOTORS or MAX_SUPPORTED_MOTORS instead of 8
             motor_disarmed[i] = convertExternalToMotor(sbufReadU16(src));
         }
-        break;
-
-    case MSP_SET_SERVO_CONFIGURATION:
-#ifdef USE_SERVOS
-        if (dataSize != 1 + sizeof(servoParam_t)) {
-            return MSP_RESULT_ERROR;
-        }
-        i = sbufReadU8(src);
-        if (i >= MAX_SUPPORTED_SERVOS) {
-            return MSP_RESULT_ERROR;
-        } else {
-            servoParamsMutable(i)->min = sbufReadU16(src);
-            servoParamsMutable(i)->max = sbufReadU16(src);
-            servoParamsMutable(i)->middle = sbufReadU16(src);
-            servoParamsMutable(i)->rate = sbufReadU8(src);
-            servoParamsMutable(i)->angleAtMin = sbufReadU8(src);
-            servoParamsMutable(i)->angleAtMax = sbufReadU8(src);
-            servoParamsMutable(i)->forwardFromChannel = sbufReadU8(src);
-            servoParamsMutable(i)->reversedSources = sbufReadU32(src);
-        }
-#endif
-        break;
-
-    case MSP_SET_SERVO_MIX_RULE:
-#ifdef USE_SERVOS
-        i = sbufReadU8(src);
-        if (i >= MAX_SERVO_RULES) {
-            return MSP_RESULT_ERROR;
-        } else {
-            customServoMixersMutable(i)->targetChannel = sbufReadU8(src);
-            customServoMixersMutable(i)->inputSource = sbufReadU8(src);
-            customServoMixersMutable(i)->rate = sbufReadU8(src);
-            customServoMixersMutable(i)->speed = sbufReadU8(src);
-            customServoMixersMutable(i)->min = sbufReadU8(src);
-            customServoMixersMutable(i)->max = sbufReadU8(src);
-            customServoMixersMutable(i)->box = sbufReadU8(src);
-            loadCustomServoMixer();
-        }
-#endif
         break;
 
     case MSP_SET_3D:
@@ -1466,93 +1220,6 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         readEEPROM();
         break;
 
-#if defined(USE_RTC6705) || defined(VTX_COMMON)
-    case MSP_SET_VTX_CONFIG:
-        {
-            uint16_t tmp = sbufReadU16(src);
-#if defined(USE_RTC6705)
-            if  (tmp < 40)
-                vtxConfigMutable()->vtx_channel = tmp;
-            if (current_vtx_channel != vtxConfig()->vtx_channel) {
-                current_vtx_channel = vtxConfig()->vtx_channel;
-                rtc6705_soft_spi_set_channel(vtx_freq[current_vtx_channel]);
-            }
-#else
-            if (vtxCommonGetDeviceType() != VTXDEV_UNKNOWN) {
-
-                uint8_t band    = (tmp / 8) + 1;
-                uint8_t channel = (tmp % 8) + 1;
-
-                uint8_t current_band=0, current_channel=0;
-                vtxCommonGetBandChan(&current_band,&current_channel);
-                if ((current_band != band) || (current_channel != channel))
-                    vtxCommonSetBandChan(band,channel);
-
-                if (sbufBytesRemaining(src) < 2)
-                    break;
-            
-                uint8_t power = sbufReadU8(src);
-                uint8_t current_power = 0;
-                vtxCommonGetPowerIndex(&current_power);
-                if (current_power != power)
-                    vtxCommonSetPowerByIndex(power);
-            
-                uint8_t pitmode = sbufReadU8(src);
-                uint8_t current_pitmode = 0;
-                vtxCommonGetPitmode(&current_pitmode);
-                if (current_pitmode != pitmode)
-                    vtxCommonSetPitmode(pitmode);
-            }
-#endif
-        }
-        break;
-#endif
-
-#ifdef USE_FLASHFS
-    case MSP_DATAFLASH_ERASE:
-        flashfsEraseCompletely();
-        break;
-#endif
-
-#ifdef GPS
-    case MSP_SET_RAW_GPS:
-        if (sbufReadU8(src)) {
-            ENABLE_STATE(GPS_FIX);
-        } else {
-            DISABLE_STATE(GPS_FIX);
-        }
-        GPS_numSat = sbufReadU8(src);
-        GPS_coord[LAT] = sbufReadU32(src);
-        GPS_coord[LON] = sbufReadU32(src);
-        GPS_altitude = sbufReadU16(src);
-        GPS_speed = sbufReadU16(src);
-        GPS_update |= 2;        // New data signalisation to GPS functions // FIXME Magic Numbers
-        break;
-    case MSP_SET_WP:
-        wp_no = sbufReadU8(src);    //get the wp number
-        lat = sbufReadU32(src);
-        lon = sbufReadU32(src);
-        alt = sbufReadU32(src);     // to set altitude (cm)
-        sbufReadU16(src);           // future: to set heading (deg)
-        sbufReadU16(src);           // future: to set time to stay (ms)
-        sbufReadU8(src);            // future: to set nav flag
-        if (wp_no == 0) {
-            GPS_home[LAT] = lat;
-            GPS_home[LON] = lon;
-            DISABLE_FLIGHT_MODE(GPS_HOME_MODE);        // with this flag, GPS_set_next_wp will be called in the next loop -- OK with SERIAL GPS / OK with I2C GPS
-            ENABLE_STATE(GPS_FIX_HOME);
-            if (alt != 0)
-                AltHold = alt;          // temporary implementation to test feature with apps
-        } else if (wp_no == 16) {       // OK with SERIAL GPS  --  NOK for I2C GPS / needs more code dev in order to inject GPS coord inside I2C GPS
-            GPS_hold[LAT] = lat;
-            GPS_hold[LON] = lon;
-            if (alt != 0)
-                AltHold = alt;          // temporary implementation to test feature with apps
-            nav_mode = NAV_MODE_WP;
-            GPS_set_next_wp(&GPS_hold[LAT], &GPS_hold[LON]);
-        }
-        break;
-#endif
     case MSP_SET_FEATURE:
         featureClearAll();
         featureSet(sbufReadU32(src)); // features bitmap
@@ -1720,16 +1387,6 @@ mspResult_e mspFcProcessCommand(mspPacket_t *cmd, mspPacket_t *reply, mspPostPro
 #ifdef USE_SERIAL_4WAY_BLHELI_INTERFACE
     } else if (cmdMSP == MSP_SET_4WAY_IF) {
         mspFc4waySerialCommand(dst, src, mspPostProcessFn);
-        ret = MSP_RESULT_ACK;
-#endif
-#ifdef GPS
-    } else if (cmdMSP == MSP_WP) {
-        mspFcWpCommand(dst, src);
-        ret = MSP_RESULT_ACK;
-#endif
-#ifdef USE_FLASHFS
-    } else if (cmdMSP == MSP_DATAFLASH_READ) {
-        mspFcDataFlashReadCommand(dst, src);
         ret = MSP_RESULT_ACK;
 #endif
     } else {

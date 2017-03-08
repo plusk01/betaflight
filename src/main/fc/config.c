@@ -44,13 +44,10 @@
 #include "drivers/pwm_output.h"
 #include "drivers/rx_pwm.h"
 #include "drivers/rx_spi.h"
-#include "drivers/sdcard.h"
 #include "drivers/sensor.h"
 #include "drivers/serial.h"
-#include "drivers/sound_beeper.h"
 #include "drivers/system.h"
 #include "drivers/timer.h"
-#include "drivers/vcd.h"
 
 #include "fc/config.h"
 #include "fc/rc_controls.h"
@@ -61,13 +58,9 @@
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
-#include "flight/navigation.h"
 #include "flight/pid.h"
 #include "flight/servos.h"
 
-#include "io/beeper.h"
-#include "io/gimbal.h"
-#include "io/gps.h"
 #include "io/motors.h"
 #include "io/serial.h"
 
@@ -81,8 +74,6 @@
 #include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
-
-#include "telemetry/telemetry.h"
 
 #ifndef USE_PARAMETER_GROUPS
 master_t masterConfig;                 // master config struct with data independent from profiles
@@ -115,41 +106,12 @@ PG_RESET_TEMPLATE(systemConfig_t, systemConfig,
     .name = { 0 }
 );
 
-PG_REGISTER(beeperConfig_t, beeperConfig, PG_BEEPER_CONFIG, 0);
 
 PG_REGISTER_WITH_RESET_FN(adcConfig_t, adcConfig, PG_ADC_CONFIG, 0);
 PG_REGISTER_WITH_RESET_FN(pwmConfig_t, pwmConfig, PG_PWM_CONFIG, 0);
 PG_REGISTER_WITH_RESET_FN(ppmConfig_t, ppmConfig, PG_PPM_CONFIG, 0);
 PG_REGISTER_WITH_RESET_FN(statusLedConfig_t, statusLedConfig, PG_STATUS_LED_CONFIG, 0);
 PG_REGISTER_WITH_RESET_FN(serialPinConfig_t, serialPinConfig, PG_SERIAL_PIN_CONFIG, 0);
-
-#ifdef USE_FLASHFS
-PG_REGISTER_WITH_RESET_TEMPLATE(flashConfig_t, flashConfig, PG_FLASH_CONFIG, 0);
-#ifdef M25P16_CS_PIN
-#define FLASH_CONFIG_CSTAG   IO_TAG(M25P16_CS_PIN)
-#else
-#define FLASH_CONFIG_CSTAG   IO_TAG_NONE
-#endif
-
-PG_RESET_TEMPLATE(flashConfig_t, flashConfig,
-    .csTag = FLASH_CONFIG_CSTAG
-);
-#endif // USE_FLASH_FS
-
-#ifdef USE_SDCARD
-PG_REGISTER_WITH_RESET_TEMPLATE(sdcardConfig_t, sdcardConfig, PG_SDCARD_CONFIG, 0);
-#if defined(SDCARD_DMA_CHANNEL_TX)
-#define SDCARD_CONFIG_USE_DMA   true
-#else
-#define SDCARD_CONFIG_USE_DMA   false
-#endif
-PG_RESET_TEMPLATE(sdcardConfig_t, sdcardConfig,
-    .useDma = SDCARD_CONFIG_USE_DMA
-);
-#endif
-
-// no template required since defaults are zero
-PG_REGISTER(vcdProfile_t, vcdProfile, PG_VCD_CONFIG, 0);
 
 #ifndef USE_PARAMETER_GROUPS
 static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
@@ -247,19 +209,6 @@ void resetProfile(profile_t *profile)
     resetPidProfile(&profile->pidProfile);
 }
 
-#ifdef GPS
-void resetNavigationConfig(navigationConfig_t *navigationConfig)
-{
-    navigationConfig->gps_wp_radius = 200;
-    navigationConfig->gps_lpf = 20;
-    navigationConfig->nav_slew_rate = 30;
-    navigationConfig->nav_controls_heading = 1;
-    navigationConfig->nav_speed_min = 100;
-    navigationConfig->nav_speed_max = 300;
-    navigationConfig->ap_mode = 40;
-}
-#endif
-
 #ifdef BARO
 void resetBarometerConfig(barometerConfig_t *barometerConfig)
 {
@@ -328,31 +277,6 @@ void resetMotorConfig(motorConfig_t *motorConfig)
 }
 #endif
 
-#ifdef SONAR
-void resetSonarConfig(sonarConfig_t *sonarConfig)
-{
-#if defined(SONAR_TRIGGER_PIN) && defined(SONAR_ECHO_PIN)
-    sonarConfig->triggerTag = IO_TAG(SONAR_TRIGGER_PIN);
-    sonarConfig->echoTag = IO_TAG(SONAR_ECHO_PIN);
-#else
-#error Sonar not defined for target
-#endif
-}
-#endif
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef USE_SDCARD
-void resetsdcardConfig(sdcardConfig_t *sdcardConfig)
-{
-#if defined(SDCARD_DMA_CHANNEL_TX)
-    sdcardConfig->useDma = true;
-#else
-    sdcardConfig->useDma = false;
-#endif
-}
-#endif // USE_SDCARD
-#endif // USE_PARAMETER_GROUPS
-
 #ifdef USE_ADC
 #ifdef USE_PARAMETER_GROUPS
 void pgResetFn_adcConfig(adcConfig_t *adcConfig)
@@ -383,22 +307,6 @@ void resetAdcConfig(adcConfig_t *adcConfig)
 }
 #endif // USE_ADC
 
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef BEEPER
-void resetBeeperDevConfig(beeperDevConfig_t *beeperDevConfig)
-{
-#ifdef BEEPER_INVERTED
-    beeperDevConfig->isOpenDrain = false;
-    beeperDevConfig->isInverted = true;
-#else
-    beeperDevConfig->isOpenDrain = true;
-    beeperDevConfig->isInverted = false;
-#endif
-    beeperDevConfig->ioTag = IO_TAG(BEEPER);
-}
-#endif
-#endif
 
 #if defined(USE_PWM) || defined(USE_PPM)
 #ifdef USE_PARAMETER_GROUPS
@@ -446,28 +354,6 @@ void resetFlight3DConfig(flight3DConfig_t *flight3DConfig)
     flight3DConfig->neutral3d = 1460;
     flight3DConfig->deadband3d_throttle = 50;
 }
-#endif
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef TELEMETRY
-void resetTelemetryConfig(telemetryConfig_t *telemetryConfig)
-{
-    telemetryConfig->telemetry_inversion = 1;
-    telemetryConfig->sportHalfDuplex = 1;
-    telemetryConfig->telemetry_switch = 0;
-    telemetryConfig->gpsNoFixLatitude = 0;
-    telemetryConfig->gpsNoFixLongitude = 0;
-    telemetryConfig->frsky_coordinate_format = FRSKY_FORMAT_DMS;
-    telemetryConfig->frsky_unit = FRSKY_UNIT_METRICS;
-    telemetryConfig->frsky_vfas_precision = 0;
-    telemetryConfig->frsky_vfas_cell_voltage = 0;
-    telemetryConfig->hottAlarmSoundInterval = 5;
-    telemetryConfig->pidValuesAsTelemetry = 0;
-#ifdef TELEMETRY_IBUS
-    telemetryConfig->report_cell_voltage = false;
-#endif
-}
-#endif
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
@@ -893,20 +779,9 @@ void createDefaultConfig(master_t *config)
     resetAdcConfig(&config->adcConfig);
 #endif
 
-#ifdef BEEPER
-    resetBeeperDevConfig(&config->beeperDevConfig);
-#endif
-#endif
-
-#ifdef SONAR
-    resetSonarConfig(&config->sonarConfig);
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
-#ifdef USE_SDCARD
-    intFeatureSet(FEATURE_SDCARD, featuresPtr);
-    resetsdcardConfig(&config->sdcardConfig);
-#endif
 
 #ifdef SERIALRX_PROVIDER
     config->rxConfig.serialrx_provider = SERIALRX_PROVIDER;
@@ -953,18 +828,7 @@ void createDefaultConfig(master_t *config)
     // Motor/ESC/Servo
     resetMixerConfig(&config->mixerConfig);
     resetMotorConfig(&config->motorConfig);
-#ifdef USE_SERVOS
-    resetServoConfig(&config->servoConfig);
-#endif
     resetFlight3DConfig(&config->flight3DConfig);
-
-#ifdef GPS
-    // gps/nav stuff
-    config->gpsConfig.provider = GPS_NMEA;
-    config->gpsConfig.sbasMode = SBAS_AUTO;
-    config->gpsConfig.autoConfig = GPS_AUTOCONFIG_ON;
-    config->gpsConfig.autoBaud = GPS_AUTOBAUD_OFF;
-#endif
 
     resetSerialPinConfig(&config->serialPinConfig);
 
@@ -979,12 +843,6 @@ void createDefaultConfig(master_t *config)
 #endif
 
     config->compassConfig.mag_declination = 0;
-
-#ifdef BARO
-#ifndef USE_PARAMETER_GROUPS
-    resetBarometerConfig(&config->barometerConfig);
-#endif
-#endif
 
     // Radio
 #ifdef RX_CHANNELS_TAER
@@ -1008,46 +866,10 @@ void createDefaultConfig(master_t *config)
     config->failsafeConfig.failsafe_procedure = FAILSAFE_PROCEDURE_DROP_IT;// default full failsafe procedure is 0: auto-landing
 #endif
 
-#ifdef USE_SERVOS
-#ifndef USE_PARAMETER_GROUPS
-    // servos
-    for (int i = 0; i < MAX_SUPPORTED_SERVOS; i++) {
-        config->servoProfile.servoConf[i].min = DEFAULT_SERVO_MIN;
-        config->servoProfile.servoConf[i].max = DEFAULT_SERVO_MAX;
-        config->servoProfile.servoConf[i].middle = DEFAULT_SERVO_MIDDLE;
-        config->servoProfile.servoConf[i].rate = 100;
-        config->servoProfile.servoConf[i].angleAtMin = DEFAULT_SERVO_MIN_ANGLE;
-        config->servoProfile.servoConf[i].angleAtMax = DEFAULT_SERVO_MAX_ANGLE;
-        config->servoProfile.servoConf[i].forwardFromChannel = CHANNEL_FORWARDING_DISABLED;
-    }
-
-    // gimbal
-    config->gimbalConfig.mode = GIMBAL_MODE_NORMAL;
-#endif
-
-    // Channel forwarding;
-    config->servoConfig.channelForwardingStartChannel = AUX1;
-#endif
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef GPS
-    resetNavigationConfig(&config->navigationConfig);
-#endif
-#endif
-
     // custom mixer. clear by defaults.
     for (int i = 0; i < MAX_SUPPORTED_MOTORS; i++) {
         config->customMotorMixer[i].throttle = 0.0f;
     }
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef VTX
-    config->vtxConfig.vtx_band = 4;    //Fatshark/Airwaves
-    config->vtxConfig.vtx_channel = 1; //CH1
-    config->vtxConfig.vtx_mode = 0;    //CH+BAND mode
-    config->vtxConfig.vtx_mhz = 5740;  //F0
-#endif
-#endif
 
 #ifdef SERIALRX_UART
     if (featureConfigured(FEATURE_RX_SERIAL)) {
@@ -1059,10 +881,6 @@ void createDefaultConfig(master_t *config)
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
-#ifdef USE_FLASHFS
-    resetFlashConfig(&config->flashConfig);
-#endif
-
     resetStatusLedConfig(&config->statusLedConfig);
 #endif
 
@@ -1092,10 +910,6 @@ void activateConfig(void)
 
     useRcControlsConfig(modeActivationConditions(0), currentPidProfile);
     useAdjustmentConfig(currentPidProfile);
-
-#ifdef GPS
-    gpsUsePIDs(currentPidProfile);
-#endif
 
     failsafeReset();
     setAccelerationTrims(&accelerometerConfigMutable()->accZero);
@@ -1315,7 +1129,6 @@ void saveConfigAndNotify(void)
 {
     writeEEPROM();
     readEEPROM();
-    beeperConfirmationBeeps(1);
 }
 
 void changePidProfile(uint8_t pidProfileIndex)
@@ -1327,45 +1140,4 @@ void changePidProfile(uint8_t pidProfileIndex)
     currentPidProfile = pidProfilesMutable(pidProfileIndex);
     writeEEPROM();
     readEEPROM();
-    beeperConfirmationBeeps(pidProfileIndex + 1);
-}
-
-void beeperOffSet(uint32_t mask)
-{
-    beeperConfigMutable()->beeper_off_flags |= mask;
-}
-
-void beeperOffSetAll(uint8_t beeperCount)
-{
-    beeperConfigMutable()->beeper_off_flags = (1 << beeperCount) -1;
-}
-
-void beeperOffClear(uint32_t mask)
-{
-    beeperConfigMutable()->beeper_off_flags &= ~(mask);
-}
-
-void beeperOffClearAll(void)
-{
-    beeperConfigMutable()->beeper_off_flags = 0;
-}
-
-uint32_t getBeeperOffMask(void)
-{
-    return beeperConfig()->beeper_off_flags;
-}
-
-void setBeeperOffMask(uint32_t mask)
-{
-    beeperConfigMutable()->beeper_off_flags = mask;
-}
-
-uint32_t getPreferredBeeperOffMask(void)
-{
-    return beeperConfig()->preferred_beeper_off_flags;
-}
-
-void setPreferredBeeperOffMask(uint32_t mask)
-{
-    beeperConfigMutable()->preferred_beeper_off_flags = mask;
 }

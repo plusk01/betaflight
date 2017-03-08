@@ -54,8 +54,6 @@
 #include "fc/config.h"
 #include "fc/runtime_config.h"
 
-#include "io/beeper.h"
-
 #include "sensors/acceleration.h"
 #include "sensors/boardalignment.h"
 #include "sensors/gyro.h"
@@ -423,7 +421,6 @@ static void performInflightAccelerationCalibration(rollAndPitchTrims_t *rollAndP
         if (InflightcalibratingA == 1) {
             AccInflightCalibrationActive = false;
             AccInflightCalibrationMeasurementDone = true;
-            beeper(BEEPER_ACC_CALIBRATION); // indicate end of calibration
             // recover saved values to maintain current flight behaviour until new values are transferred
             accelerationTrims->raw[X] = accZero_saved[X];
             accelerationTrims->raw[Y] = accZero_saved[Y];

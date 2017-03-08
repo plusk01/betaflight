@@ -54,7 +54,6 @@
 #include "rx/msp.h"
 #include "rx/xbus.h"
 #include "rx/ibus.h"
-#include "rx/jetiexbus.h"
 #include "rx/crsf.h"
 #include "rx/rx_spi.h"
 
@@ -233,11 +232,6 @@ bool serialRxInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig
 #ifdef USE_SERIALRX_IBUS
     case SERIALRX_IBUS:
         enabled = ibusInit(rxConfig, rxRuntimeConfig);
-        break;
-#endif
-#ifdef USE_SERIALRX_JETIEXBUS
-    case SERIALRX_JETIEXBUS:
-        enabled = jetiExBusInit(rxConfig, rxRuntimeConfig);
         break;
 #endif
 #ifdef USE_SERIALRX_CRSF

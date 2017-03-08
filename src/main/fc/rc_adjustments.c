@@ -37,7 +37,6 @@
 
 #include "flight/pid.h"
 
-#include "io/beeper.h"
 #include "io/motors.h"
 
 #include "fc/config.h"
@@ -207,11 +206,6 @@ static void applyStepAdjustment(controlRateConfig_t *controlRateConfig, uint8_t 
 {
     int newValue;
 
-    if (delta > 0) {
-        beeperConfirmationBeeps(2);
-    } else {
-        beeperConfirmationBeeps(1);
-    }
     switch(adjustmentFunction) {
         case ADJUSTMENT_RC_RATE:
             newValue = constrain((int)controlRateConfig->rcRate8 + delta, 0, 250); // FIXME magic numbers repeated in cli.c
@@ -342,9 +336,6 @@ static void applySelectAdjustment(uint8_t adjustmentFunction, uint8_t position)
             break;
     }
 
-    if (applied) {
-        beeperConfirmationBeeps(position + 1);
-    }
 }
 
 #define RESET_FREQUENCY_2HZ (1000 / 2)

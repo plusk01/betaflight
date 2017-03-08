@@ -82,28 +82,21 @@
 #define USE_SERIALRX_XBUS       // JR
 
 #if (FLASH_SIZE > 64)
-#define BLACKBOX
-#define LED_STRIP
-#define TELEMETRY
 #define TELEMETRY_FRSKY
 #define TELEMETRY_HOTT
 #define TELEMETRY_LTM
 #define TELEMETRY_SMARTPORT
 #define USE_RESOURCE_MGMT
-#define USE_SERVOS
 #endif
 
 #if (FLASH_SIZE > 128)
-#define GPS
 #define CMS
 #define TELEMETRY_CRSF
-#define TELEMETRY_JETIEXBUS
 #define TELEMETRY_MAVLINK
 #define TELEMETRY_SRXL
 #define USE_DASHBOARD
 #define USE_MSP_DISPLAYPORT
 #define USE_RX_MSP
-#define USE_SERIALRX_JETIEXBUS
 #define USE_SENSOR_NAMES
 #endif
 

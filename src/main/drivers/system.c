@@ -22,7 +22,6 @@
 
 #include "gpio.h"
 #include "light_led.h"
-#include "sound_beeper.h"
 #include "nvic.h"
 #include "build/atomic.h"
 
@@ -180,12 +179,10 @@ void failureMode(failureMode_e mode)
         while (shortFlashesRemaining || codeFlashesRemaining) {
             LED1_TOGGLE;
             LED0_TOGGLE;
-            BEEP_ON;
             delay(flashDuration);
 
             LED1_TOGGLE;
             LED0_TOGGLE;
-            BEEP_OFF;
             delay(flashDuration);
 
             if (shortFlashesRemaining) {

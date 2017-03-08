@@ -40,14 +40,11 @@
 #include "flight/mixer.h"
 #include "flight/pid.h"
 
-#include "io/gps.h"
-
 #include "sensors/acceleration.h"
 #include "sensors/barometer.h"
 #include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
-#include "sensors/sonar.h"
 
 
 // the limit (in degrees/second) beyond which we stop integrating
@@ -387,13 +384,6 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
     if (sensors(SENSOR_MAG) && isMagnetometerHealthy()) {
         useMag = true;
     }
-#if defined(GPS)
-    else if (STATE(FIXED_WING) && sensors(SENSOR_GPS) && STATE(GPS_FIX) && GPS_numSat >= 5 && GPS_speed >= 300) {
-        // In case of a fixed-wing aircraft we can use GPS course over ground to correct heading
-        rawYawError = DECIDEGREES_TO_RADIANS(attitude.values.yaw - GPS_ground_course);
-        useYaw = true;
-    }
-#endif
 
     imuMahonyAHRSupdate(deltaT * 1e-6f,
                         DEGREES_TO_RADIANS(gyro.gyroADCf[X]), DEGREES_TO_RADIANS(gyro.gyroADCf[Y]), DEGREES_TO_RADIANS(gyro.gyroADCf[Z]),

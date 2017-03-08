@@ -21,7 +21,6 @@
 #include "platform.h"
 
 #include "fc/runtime_config.h"
-#include "io/beeper.h"
 
 uint8_t armingFlags = 0;
 uint8_t stateFlags = 0;
@@ -35,11 +34,9 @@ static uint32_t enabledSensors = 0;
  */
 uint16_t enableFlightMode(flightModeFlags_e mask)
 {
-    uint16_t oldVal = flightModeFlags;
 
     flightModeFlags |= (mask);
-    if (flightModeFlags != oldVal)
-        beeperConfirmationBeeps(1);
+
     return flightModeFlags;
 }
 
@@ -49,11 +46,9 @@ uint16_t enableFlightMode(flightModeFlags_e mask)
  */
 uint16_t disableFlightMode(flightModeFlags_e mask)
 {
-    uint16_t oldVal = flightModeFlags;
 
     flightModeFlags &= ~(mask);
-    if (flightModeFlags != oldVal)
-        beeperConfirmationBeeps(1);
+    
     return flightModeFlags;
 }
 

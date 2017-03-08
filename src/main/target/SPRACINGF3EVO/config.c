@@ -23,6 +23,6 @@
 void targetConfiguration(master_t *config)
 {
     // Temporary workaround: Disable SDCard DMA by default since it causes errors on this target
-    config->sdcardConfig.useDma = false;
+    // config->sdcardConfig.useDma = false;
 }
 #endif

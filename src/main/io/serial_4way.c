@@ -34,7 +34,6 @@
 
 #include "flight/mixer.h"
 
-#include "io/beeper.h"
 #include "io/serial_4way.h"
 
 #ifdef USE_SERIAL_4WAY_BLHELI_BOOTLOADER
@@ -410,11 +409,6 @@ void esc4wayProcess(serialPort_t *mspPort)
     port = mspPort;
 
     // Start here  with UART Main loop
-    #ifdef BEEPER
-    // fix for buzzer often starts beeping continuously when the ESCs are read
-    // switch beeper silent here
-    beeperSilence();
-    #endif
     bool isExitScheduled = false;
 
     while(1) {

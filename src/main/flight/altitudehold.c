@@ -41,7 +41,6 @@
 #include "rx/rx.h"
 
 #include "sensors/barometer.h"
-#include "sensors/sonar.h"
 
 
 PG_REGISTER_WITH_RESET_TEMPLATE(airplaneConfig_t, airplaneConfig, PG_AIRPLANE_CONFIG, 0);

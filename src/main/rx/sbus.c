@@ -29,9 +29,6 @@
 
 #include "io/serial.h"
 
-#ifdef TELEMETRY
-#include "telemetry/telemetry.h"
-#endif
 #include "rx/rx.h"
 #include "rx/sbus.h"
 
@@ -242,11 +239,7 @@ bool sbusInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig)
         return false;
     }
 
-#ifdef TELEMETRY
-    bool portShared = telemetryCheckRxPortShared(portConfig);
-#else
     bool portShared = false;
-#endif
 
     serialPort_t *sBusPort = openSerialPort(portConfig->identifier, 
         FUNCTION_RX_SERIAL, 
@@ -255,12 +248,6 @@ bool sbusInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig)
         portShared ? MODE_RXTX : MODE_RX, 
         SBUS_PORT_OPTIONS | (rxConfig->sbus_inversion ? SERIAL_INVERTED : 0) | (rxConfig->halfDuplex ? SERIAL_BIDIR : 0)
         );
-
-#ifdef TELEMETRY
-    if (portShared) {
-        telemetrySharedPort = sBusPort;
-    }
-#endif
 
     return sBusPort != NULL;
 }

@@ -35,7 +35,6 @@
 
 #include "flight/failsafe.h"
 
-#include "io/beeper.h"
 #include "io/motors.h"
 
 #include "rx/rx.h"
@@ -172,13 +171,6 @@ void failsafeUpdateState(void)
     bool receivingRxData = failsafeIsReceivingRxData();
     bool armed = ARMING_FLAG(ARMED);
     bool failsafeSwitchIsOn = IS_RC_MODE_ACTIVE(BOXFAILSAFE);
-    beeperMode_e beeperMode = BEEPER_SILENCE;
-
-    // Beep RX lost only if we are not seeing data and we have been armed earlier
-    if (!receivingRxData && ARMING_FLAG(WAS_EVER_ARMED)) {
-        beeperMode = BEEPER_RX_LOST;
-    }
-
     bool reprocessState;
 
     do {
@@ -250,7 +242,6 @@ void failsafeUpdateState(void)
                 }
                 if (armed) {
                     failsafeApplyControlInput();
-                    beeperMode = BEEPER_RX_LOST_LANDING;
                 }
                 if (failsafeShouldHaveCausedLandingByNow() || !armed) {
                     failsafeState.receivingRxDataPeriodPreset = PERIOD_OF_30_SECONDS; // require 30 seconds of valid rxData
@@ -298,8 +289,4 @@ void failsafeUpdateState(void)
                 break;
         }
     } while (reprocessState);
-
-    if (beeperMode != BEEPER_SILENCE) {
-        beeper(beeperMode);
-    }
 }
