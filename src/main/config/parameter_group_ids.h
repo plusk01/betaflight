@@ -93,17 +93,8 @@
 #define PG_SERIAL_PIN_CONFIG 509
 #define PG_ADC_CONFIG 510
 #define PG_SDCARD_CONFIG 511
-#define PG_DISPLAY_PORT_MSP_CONFIG 512
-#define PG_DISPLAY_PORT_MAX7456_CONFIG 513
 #define PG_VCD_CONFIG 514
-#define PG_VTX_CONFIG 515
 #define PG_BETAFLIGHT_END 515
-
-
-// OSD configuration (subject to change)
-#define PG_OSD_FONT_CONFIG 2047
-#define PG_OSD_VIDEO_CONFIG 2046
-#define PG_OSD_ELEMENT_CONFIG 2045
 
 // 4095 is currently the highest number that can be used for a PGN due to the top 4 bits of the 16 bit value being reserved for the version when the PG is stored in an EEPROM.
 #define PG_RESERVED_FOR_TESTING_1 4095

@@ -105,9 +105,5 @@
 #define USE_RX_MSP
 #define USE_SERIALRX_JETIEXBUS
 #define USE_SENSOR_NAMES
-#define VTX_COMMON
-#define VTX_CONTROL
-#define VTX_SMARTAUDIO
-#define VTX_TRAMP
 #endif
 

@@ -575,7 +575,6 @@ COMMON_SRC = \
             drivers/bus_i2c_soft.c \
             drivers/bus_spi.c \
             drivers/bus_spi_soft.c \
-            drivers/display.c \
             drivers/exti.c \
             drivers/gyro_sync.c \
             drivers/io.c \
@@ -648,19 +647,9 @@ COMMON_SRC = \
             sensors/initialisation.c \
             common/colorconversion.c \
             common/gps_conversion.c \
-            drivers/display_ug2864hsweg01.c \
-            drivers/light_ws2811strip.c \
             drivers/serial_escserial.c \
-            drivers/sonar_hcsr04.c \
-            drivers/vtx_common.c \
-            drivers/transponder_ir.c \
             flight/navigation.c \
-            io/dashboard.c \
-            io/displayport_max7456.c \
-            io/displayport_msp.c \
-            io/displayport_oled.c \
             io/gps.c \
-            io/ledstrip.c \
             sensors/sonar.c \
             sensors/barometer.c \
             telemetry/telemetry.c \
@@ -740,11 +729,8 @@ SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
             sensors/gyroanalyse.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC) \
-            drivers/display_ug2864hsweg01.c \
-            drivers/light_ws2811strip.c \
             drivers/serial_softserial.c \
             io/dashboard.c \
-            io/displayport_max7456.c \
             io/osd.c \
 
 SIZE_OPTIMISED_SRC := $(SIZE_OPTIMISED_SRC) \
@@ -802,7 +788,6 @@ STM32F10x_COMMON_SRC = \
             drivers/dma.c \
             drivers/gpio_stm32f10x.c \
             drivers/inverter.c \
-            drivers/light_ws2811strip_stdperiph.c \
             drivers/serial_uart_stm32f10x.c \
             drivers/system_stm32f10x.c \
             drivers/timer_stm32f10x.c
@@ -813,7 +798,6 @@ STM32F30x_COMMON_SRC = \
             drivers/bus_i2c_stm32f30x.c \
             drivers/dma.c \
             drivers/gpio_stm32f30x.c \
-            drivers/light_ws2811strip_stdperiph.c \
             drivers/pwm_output_dshot.c \
             drivers/serial_uart_stm32f30x.c \
             drivers/system_stm32f30x.c \
@@ -827,7 +811,6 @@ STM32F4xx_COMMON_SRC = \
             drivers/dma_stm32f4xx.c \
             drivers/gpio_stm32f4xx.c \
             drivers/inverter.c \
-            drivers/light_ws2811strip_stdperiph.c \
             drivers/pwm_output_dshot.c \
             drivers/serial_uart_stm32f4xx.c \
             drivers/system_stm32f4xx.c \

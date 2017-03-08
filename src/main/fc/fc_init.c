@@ -57,7 +57,6 @@
 #include "drivers/sdcard.h"
 #include "drivers/usb_io.h"
 #include "drivers/exti.h"
-#include "drivers/vtx_soft_spi_rtc6705.h"
 
 #ifdef USE_BST
 #include "bus_bst.h"
@@ -77,16 +76,12 @@
 #include "rx/spektrum.h"
 
 #include "io/beeper.h"
-#include "io/displayport_max7456.h"
 #include "io/serial.h"
 #include "io/flashfs.h"
 #include "io/gps.h"
 #include "io/motors.h"
 #include "io/gimbal.h"
-#include "io/ledstrip.h"
-#include "io/dashboard.h"
 #include "io/asyncfatfs/asyncfatfs.h"
-#include "io/displayport_msp.h"
 
 #include "scheduler/scheduler.h"
 
@@ -348,10 +343,6 @@ void init(void)
     updateHardwareRevision();
 #endif
 
-#ifdef VTX
-    vtxInit();
-#endif
-
 #if defined(SONAR_SOFTSERIAL2_EXCLUSIVE) && defined(SONAR) && defined(USE_SOFTSERIAL2)
     if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
         serialRemovePort(SERIAL_PORT_SOFTSERIAL2);
@@ -373,21 +364,6 @@ void init(void)
 #endif
 
     initBoardAlignment(boardAlignment());
-
-#ifdef USE_DASHBOARD
-    if (feature(FEATURE_DASHBOARD)) {
-        dashboardInit();
-    }
-#endif
-
-#ifdef USE_RTC6705
-    if (feature(FEATURE_VTX)) {
-        rtc6705_soft_spi_init();
-        current_vtx_channel = vtxConfig()->vtx_channel;
-        rtc6705_soft_spi_set_channel(vtx_freq[current_vtx_channel]);
-        rtc6705_soft_spi_set_rf_power(vtxConfig()->vtx_power);
-    }
-#endif
 
     if (!sensorsAutodetect()) {
         // if gyro was not detected due to whatever reason, we give up now.
@@ -431,14 +407,6 @@ void init(void)
     if (feature(FEATURE_GPS)) {
         gpsInit();
         navigationInit();
-    }
-#endif
-
-#ifdef LED_STRIP
-    ledStripInit();
-
-    if (feature(FEATURE_LED_STRIP)) {
-        ledStripEnable();
     }
 #endif
 
@@ -495,17 +463,6 @@ void init(void)
 
     if (feature(FEATURE_VBAT | FEATURE_CURRENT_METER))
         batteryInit();
-
-#ifdef USE_DASHBOARD
-    if (feature(FEATURE_DASHBOARD)) {
-#ifdef USE_OLED_GPS_DEBUG_PAGE_ONLY
-        dashboardShowFixedPage(PAGE_GPS);
-#else
-        dashboardResetPageCycling();
-        dashboardEnablePageCycling();
-#endif
-    }
-#endif
 
 #ifdef CJMCU
     LED2_ON;

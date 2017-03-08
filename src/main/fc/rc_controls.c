@@ -43,7 +43,6 @@
 #include "io/gps.h"
 #include "io/beeper.h"
 #include "io/motors.h"
-#include "io/dashboard.h"
 
 #include "sensors/barometer.h"
 #include "sensors/battery.h"
@@ -275,31 +274,6 @@ void processRcStickPositions(throttleStatus_e throttleStatus)
         rcDelayCommand = 0; // allow autorepetition
         return;
     }
-
-#ifdef USE_DASHBOARD
-    if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_LO) {
-        dashboardDisablePageCycling();
-    }
-
-    if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_HI) {
-        dashboardEnablePageCycling();
-    }
-#endif
-
-#ifdef VTX
-    if (rcSticks ==  THR_HI + YAW_LO + PIT_CE + ROL_HI) {
-        vtxIncrementBand();
-    }
-    if (rcSticks ==  THR_HI + YAW_LO + PIT_CE + ROL_LO) {
-        vtxDecrementBand();
-    }
-    if (rcSticks ==  THR_HI + YAW_HI + PIT_CE + ROL_HI) {
-        vtxIncrementChannel();
-    }
-    if (rcSticks ==  THR_HI + YAW_HI + PIT_CE + ROL_LO) {
-        vtxDecrementChannel();
-    }
-#endif
 
 }
 

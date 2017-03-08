@@ -43,15 +43,12 @@
 #include "drivers/compass.h"
 #include "drivers/flash.h"
 #include "drivers/io.h"
-#include "drivers/max7456.h"
 #include "drivers/pwm_output.h"
 #include "drivers/sdcard.h"
 #include "drivers/serial.h"
 #include "drivers/serial_escserial.h"
 #include "drivers/system.h"
 #include "drivers/vcd.h"
-#include "drivers/vtx_common.h"
-#include "drivers/vtx_soft_spi_rtc6705.h"
 
 #include "fc/config.h"
 #include "fc/fc_core.h"
@@ -74,7 +71,6 @@
 #include "io/flashfs.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
-#include "io/ledstrip.h"
 #include "io/motors.h"
 #include "io/serial.h"
 #include "io/serial_4way.h"
@@ -994,43 +990,6 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
         }
         break;
 
-#ifdef LED_STRIP
-    case MSP_LED_COLORS:
-        for (int i = 0; i < LED_CONFIGURABLE_COLOR_COUNT; i++) {
-            const hsvColor_t *color = &ledStripConfig()->colors[i];
-            sbufWriteU16(dst, color->h);
-            sbufWriteU8(dst, color->s);
-            sbufWriteU8(dst, color->v);
-        }
-        break;
-
-    case MSP_LED_STRIP_CONFIG:
-        for (int i = 0; i < LED_MAX_STRIP_LENGTH; i++) {
-            const ledConfig_t *ledConfig = &ledStripConfig()->ledConfigs[i];
-            sbufWriteU32(dst, *ledConfig);
-        }
-        break;
-
-    case MSP_LED_STRIP_MODECOLOR:
-        for (int i = 0; i < LED_MODE_COUNT; i++) {
-            for (int j = 0; j < LED_DIRECTION_COUNT; j++) {
-                sbufWriteU8(dst, i);
-                sbufWriteU8(dst, j);
-                sbufWriteU8(dst, ledStripConfig()->modeColors[i].color[j]);
-            }
-        }
-
-        for (int j = 0; j < LED_SPECIAL_COLOR_COUNT; j++) {
-            sbufWriteU8(dst, LED_MODE_COUNT);
-            sbufWriteU8(dst, j);
-            sbufWriteU8(dst, ledStripConfig()->specialColors.color[j]);
-        }
-
-        sbufWriteU8(dst, LED_AUX_CHANNEL);
-        sbufWriteU8(dst, 0);
-        sbufWriteU8(dst, ledStripConfig()->ledstrip_aux_channel);
-        break;
-#endif
 
     case MSP_DATAFLASH_SUMMARY:
         serializeDataflashSummaryReply(dst);
@@ -1122,35 +1081,6 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
         if (mspPostProcessFn) {
             *mspPostProcessFn = mspRebootFn;
         }
-        break;
-
-#if defined(VTX_COMMON)
-    case MSP_VTX_CONFIG:
-        {
-            uint8_t deviceType = vtxCommonGetDeviceType();
-            if (deviceType != VTXDEV_UNKNOWN) {
-
-                uint8_t band=0, channel=0;
-                vtxCommonGetBandChan(&band,&channel);
-                
-                uint8_t powerIdx=0; // debug
-                vtxCommonGetPowerIndex(&powerIdx);
-                
-                uint8_t pitmode=0;
-                vtxCommonGetPitmode(&pitmode);
-                
-                sbufWriteU8(dst, deviceType);
-                sbufWriteU8(dst, band);
-                sbufWriteU8(dst, channel);
-                sbufWriteU8(dst, powerIdx);
-                sbufWriteU8(dst, pitmode);
-                // future extensions here...
-            }
-            else {
-                sbufWriteU8(dst, VTXDEV_UNKNOWN); // no VTX detected
-            }
-        }
-#endif
         break;
 
     default:
@@ -1758,40 +1688,6 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
             }
         }
         break;
-
-#ifdef LED_STRIP
-    case MSP_SET_LED_COLORS:
-        for (int i = 0; i < LED_CONFIGURABLE_COLOR_COUNT; i++) {
-            hsvColor_t *color = &ledStripConfigMutable()->colors[i];
-            color->h = sbufReadU16(src);
-            color->s = sbufReadU8(src);
-            color->v = sbufReadU8(src);
-        }
-        break;
-
-    case MSP_SET_LED_STRIP_CONFIG:
-        {
-            i = sbufReadU8(src);
-            if (i >= LED_MAX_STRIP_LENGTH || dataSize != (1 + 4)) {
-                return MSP_RESULT_ERROR;
-            }
-            ledConfig_t *ledConfig = &ledStripConfigMutable()->ledConfigs[i];
-            *ledConfig = sbufReadU32(src);
-            reevaluateLedConfig();
-        }
-        break;
-
-    case MSP_SET_LED_STRIP_MODECOLOR:
-        {
-            ledModeIndex_e modeIdx = sbufReadU8(src);
-            int funIdx = sbufReadU8(src);
-            int color = sbufReadU8(src);
-
-            if (!setModeColor(modeIdx, funIdx, color))
-                return MSP_RESULT_ERROR;
-        }
-        break;
-#endif
 
     case MSP_SET_NAME:
         memset(systemConfigMutable()->name, 0, ARRAYLEN(systemConfig()->name));

@@ -35,7 +35,6 @@
 #include "drivers/compass.h"
 #include "drivers/serial.h"
 #include "drivers/stack_check.h"
-#include "drivers/vtx_common.h"
 
 #include "fc/config.h"
 #include "fc/fc_msp.h"
@@ -52,9 +51,7 @@
 #include "flight/pid.h"
 
 #include "io/beeper.h"
-#include "io/dashboard.h"
 #include "io/gps.h"
-#include "io/ledstrip.h"
 #include "io/serial.h"
 
 #include "msp/msp_serial.h"
@@ -202,19 +199,6 @@ static void taskTelemetry(timeUs_t currentTimeUs)
     if (!cliMode && feature(FEATURE_TELEMETRY)) {
         telemetryProcess(currentTimeUs);
     }
-}
-#endif
-
-#ifdef VTX_CONTROL
-// Everything that listens to VTX devices
-void taskVtxControl(uint32_t currentTime)
-{
-    if (ARMING_FLAG(ARMED))
-        return;
-
-#ifdef VTX_COMMON
-    vtxCommonProcess(currentTime);
-#endif
 }
 #endif
 
@@ -422,36 +406,11 @@ cfTask_t cfTasks[TASK_COUNT] = {
     },
 #endif
 
-#ifdef USE_DASHBOARD
-    [TASK_DASHBOARD] = {
-        .taskName = "DASHBOARD",
-        .taskFunc = dashboardUpdate,
-        .desiredPeriod = TASK_PERIOD_HZ(10),
-        .staticPriority = TASK_PRIORITY_LOW,
-    },
-#endif
-#ifdef OSD
-    [TASK_OSD] = {
-        .taskName = "OSD",
-        .taskFunc = osdUpdate,
-        .desiredPeriod = TASK_PERIOD_HZ(60),        // 60 Hz
-        .staticPriority = TASK_PRIORITY_LOW,
-    },
-#endif
 #ifdef TELEMETRY
     [TASK_TELEMETRY] = {
         .taskName = "TELEMETRY",
         .taskFunc = taskTelemetry,
         .desiredPeriod = TASK_PERIOD_HZ(250),       // 250 Hz, 4ms
-        .staticPriority = TASK_PRIORITY_LOW,
-    },
-#endif
-
-#ifdef LED_STRIP
-    [TASK_LEDSTRIP] = {
-        .taskName = "LEDSTRIP",
-        .taskFunc = ledStripUpdate,
-        .desiredPeriod = TASK_PERIOD_HZ(100),       // 100 Hz, 10ms
         .staticPriority = TASK_PRIORITY_LOW,
     },
 #endif

@@ -55,7 +55,6 @@ extern uint8_t __config_end;
 #include "drivers/buf_writer.h"
 #include "drivers/bus_i2c.h"
 #include "drivers/compass.h"
-#include "drivers/display.h"
 #include "drivers/dma.h"
 #include "drivers/flash.h"
 #include "drivers/io.h"
@@ -89,7 +88,6 @@ extern uint8_t __config_end;
 #include "io/flashfs.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
-#include "io/ledstrip.h"
 #include "io/serial.h"
 
 #include "rx/rx.h"
@@ -135,9 +133,9 @@ static const char * const featureNames[] = {
     "RX_PPM", "VBAT", "INFLIGHT_ACC_CAL", "RX_SERIAL", "MOTOR_STOP",
     "SERVO_TILT", "SOFTSERIAL", "GPS", "FAILSAFE",
     "SONAR", "TELEMETRY", "CURRENT_METER", "3D", "RX_PARALLEL_PWM",
-    "RX_MSP", "RSSI_ADC", "LED_STRIP", "DISPLAY", "OSD",
-    "BLACKBOX", "CHANNEL_FORWARDING", "TRANSPONDER", "AIRMODE",
-    "SDCARD", "VTX", "RX_SPI", "SOFTSPI", "ESC_SENSOR", NULL
+    "RX_MSP", "RSSI_ADC", "DISPLAY", "OSD",
+    "CHANNEL_FORWARDING", "TRANSPONDER", "AIRMODE",
+    "SDCARD", "RX_SPI", "SOFTSPI", "ESC_SENSOR", NULL
 };
 
 // sync this with rxFailsafeChannelMode_e
@@ -772,45 +770,8 @@ static const clivalue_t valueTable[] = {
 #endif
 #endif
 
-// PG_LED_STRIP_CONFIG
-#ifdef LED_STRIP
-    { "ledstrip_visual_beeper",     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_LED_STRIP_CONFIG, offsetof(ledStripConfig_t, ledstrip_visual_beeper) },
-#endif
-
 #ifdef USE_SDCARD
     { "sdcard_dma",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_SDCARD_CONFIG, offsetof(sdcardConfig_t, useDma) },
-#endif
-
-// PG_OSD_CONFIG
-#ifdef OSD
-    { "osd_units",                  VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_UNIT }, PG_OSD_CONFIG, offsetof(osdConfig_t, units) },
-
-    { "osd_rssi_alarm",             VAR_UINT8  | MASTER_VALUE, .config.minmax = { 0, 100 }, PG_OSD_CONFIG, offsetof(osdConfig_t, rssi_alarm) },
-    { "osd_cap_alarm",              VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 20000 }, PG_OSD_CONFIG, offsetof(osdConfig_t, cap_alarm) },
-    { "osd_time_alarm",             VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 60 }, PG_OSD_CONFIG, offsetof(osdConfig_t, time_alarm) },
-    { "osd_alt_alarm",              VAR_UINT16 | MASTER_VALUE, .config.minmax = { 0, 10000 }, PG_OSD_CONFIG, offsetof(osdConfig_t, alt_alarm) },
-
-    { "osd_vbat_pos",               VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_MAIN_BATT_VOLTAGE]) },
-    { "osd_rssi_pos",               VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_RSSI_VALUE]) },
-    { "osd_flytimer_pos",           VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_FLYTIME]) },
-    { "osd_ontimer_pos",            VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_ONTIME]) },
-    { "osd_flymode_pos",            VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_FLYMODE]) },
-    { "osd_throttle_pos",           VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_THROTTLE_POS]) },
-    { "osd_vtx_channel_pos",        VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_VTX_CHANNEL]) },
-    { "osd_crosshairs",             VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_CROSSHAIRS]) },
-    { "osd_horizon_pos",            VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_ARTIFICIAL_HORIZON]) },
-    { "osd_current_pos",            VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_CURRENT_DRAW]) },
-    { "osd_mah_drawn_pos",          VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_MAH_DRAWN]) },
-    { "osd_craft_name_pos",         VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_CRAFT_NAME]) },
-    { "osd_gps_speed_pos",          VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_GPS_SPEED]) },
-    { "osd_gps_sats_pos",           VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_GPS_SATS]) },
-    { "osd_altitude_pos",           VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_ALTITUDE]) },
-    { "osd_pid_roll_pos",           VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_ROLL_PIDS]) },
-    { "osd_pid_pitch_pos",          VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_PITCH_PIDS]) },
-    { "osd_pid_yaw_pos",            VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_YAW_PIDS]) },
-    { "osd_power_pos",              VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_POWER]) },
-    { "osd_pidrate_profile_pos",    VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_PIDRATE_PROFILE]) },
-    { "osd_battery_warning_pos",    VAR_UINT16  | MASTER_VALUE, .config.minmax = { 0, OSD_POSCFG_MAX }, PG_OSD_CONFIG, offsetof(osdConfig_t, item_pos[OSD_MAIN_BATT_WARNING]) },
 #endif
 
 // PG_SYSTEM_CONFIG
@@ -818,30 +779,6 @@ static const clivalue_t valueTable[] = {
     { "task_statistics",            VAR_INT8   | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_SYSTEM_CONFIG, offsetof(systemConfig_t, task_statistics) },
 #endif
     { "debug_mode",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_DEBUG }, PG_SYSTEM_CONFIG, offsetof(systemConfig_t, debug_mode) },
-#ifdef VTX
-    { "vtx_band",                   VAR_UINT8  | MASTER_VALUE, .config.minmax = { 1, 5 }, PG_VTX_CONFIG, offsetof(vtxConfig_t, vtx_band) },
-    { "vtx_channel",                VAR_UINT8  | MASTER_VALUE, .config.minmax = { 1, 8 }, PG_VTX_CONFIG, offsetof(vtxConfig_t, vtx_channel) },
-    { "vtx_mode",                   VAR_UINT8  | MASTER_VALUE, .config.minmax = { 0, 2 }, PG_VTX_CONFIG, offsetof(vtxConfig_t, vtx_mode) },
-    { "vtx_mhz",                    VAR_UINT16 | MASTER_VALUE, .config.minmax = { 5600, 5950 }, PG_VTX_CONFIG, offsetof(vtxConfig_t, vtx_mhz) },
-#endif
-    
-#if defined(USE_RTC6705)
-    { "vtx_channel",                VAR_UINT8  | MASTER_VALUE, .config.minmax = { 0, 39 }, PG_VTX_CONFIG, offsetof(vtxConfig_t, vtx_channel) },
-    { "vtx_power",                  VAR_UINT8  | MASTER_VALUE, .config.minmax = { 0, 1 }, PG_VTX_CONFIG, offsetof(vtxConfig_t, vtx_power) },
-#endif
-#ifdef USE_MAX7456
-    { "vcd_video_system",           VAR_UINT8   | MASTER_VALUE, .config.minmax = { 0, 2 }, PG_VCD_CONFIG, offsetof(vcdProfile_t, video_system) },
-    { "vcd_h_offset",               VAR_INT8    | MASTER_VALUE, .config.minmax = { -32, 31 }, PG_VCD_CONFIG, offsetof(vcdProfile_t, h_offset) },
-    { "vcd_v_offset",               VAR_INT8    | MASTER_VALUE, .config.minmax = { -15, 16 }, PG_VCD_CONFIG, offsetof(vcdProfile_t, v_offset) },
-#endif
-#ifdef USE_MSP_DISPLAYPORT
-    { "displayport_msp_col_adjust", VAR_INT8    | MASTER_VALUE, .config.minmax = { -6, 0 }, PG_DISPLAY_PORT_MSP_CONFIG, offsetof(displayPortProfile_t, colAdjust) },
-    { "displayport_msp_row_adjust", VAR_INT8    | MASTER_VALUE, .config.minmax = { -3, 0 }, PG_DISPLAY_PORT_MSP_CONFIG, offsetof(displayPortProfile_t, rowAdjust) },
-#endif
-#ifdef USE_MAX7456
-    { "displayport_max7456_col_adjust", VAR_INT8| MASTER_VALUE, .config.minmax = { -6, 0 }, PG_DISPLAY_PORT_MAX7456_CONFIG, offsetof(displayPortProfile_t, colAdjust) },
-    { "displayport_max7456_row_adjust", VAR_INT8| MASTER_VALUE, .config.minmax = { -3, 0 }, PG_DISPLAY_PORT_MAX7456_CONFIG, offsetof(displayPortProfile_t, rowAdjust) },
-#endif
 };
 
 #else
@@ -1108,58 +1045,8 @@ static const clivalue_t valueTable[] = {
     { "magzero_y",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[Y], .config.minmax = { INT16_MIN,  INT16_MAX } },
     { "magzero_z",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[Z], .config.minmax = { INT16_MIN,  INT16_MAX } },
 #endif
-#ifdef LED_STRIP
-    { "ledstrip_visual_beeper",     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, &ledStripConfig()->ledstrip_visual_beeper, .config.lookup = { TABLE_OFF_ON } },
-#endif
-#if defined(USE_RTC6705)
-    { "vtx_channel",                VAR_UINT8  | MASTER_VALUE, &vtxConfig()->vtx_channel, .config.minmax = { 0,  39 } },
-    { "vtx_power",                  VAR_UINT8  | MASTER_VALUE, &vtxConfig()->vtx_power,   .config.minmax = { 0,  1 } },
-#endif
 #ifdef USE_SDCARD
     { "sdcard_dma",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, &sdcardConfig()->useDma, .config.lookup = { TABLE_OFF_ON } },
-#endif
-#ifdef OSD
-    { "osd_units",                  VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, &osdConfig()->units, .config.lookup = { TABLE_UNIT } },
-
-    { "osd_rssi_alarm",             VAR_UINT8  | MASTER_VALUE, &osdConfig()->rssi_alarm, .config.minmax = { 0, 100 } },
-    { "osd_cap_alarm",              VAR_UINT16 | MASTER_VALUE, &osdConfig()->cap_alarm, .config.minmax = { 0, 20000 } },
-    { "osd_time_alarm",             VAR_UINT16 | MASTER_VALUE, &osdConfig()->time_alarm, .config.minmax = { 0, 60 } },
-    { "osd_alt_alarm",              VAR_UINT16 | MASTER_VALUE, &osdConfig()->alt_alarm, .config.minmax = { 0, 10000 } },
-
-    { "osd_vbat_pos",               VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_MAIN_BATT_VOLTAGE], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_rssi_pos",               VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_RSSI_VALUE], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_flytimer_pos",           VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_FLYTIME], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_ontimer_pos",            VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_ONTIME], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_flymode_pos",            VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_FLYMODE], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_throttle_pos",           VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_THROTTLE_POS], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_vtx_channel_pos",        VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_VTX_CHANNEL], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_crosshairs",             VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_CROSSHAIRS], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_horizon_pos",            VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_ARTIFICIAL_HORIZON], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_current_pos",            VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_CURRENT_DRAW], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_mah_drawn_pos",          VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_MAH_DRAWN], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_craft_name_pos",         VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_CRAFT_NAME], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_gps_speed_pos",          VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_GPS_SPEED], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_gps_sats_pos",           VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_GPS_SATS], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_altitude_pos",           VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_ALTITUDE], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_pid_roll_pos",           VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_ROLL_PIDS], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_pid_pitch_pos",          VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_PITCH_PIDS], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_pid_yaw_pos",            VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_YAW_PIDS], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_power_pos",              VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_POWER], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_pidrate_profile_pos",    VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_PIDRATE_PROFILE], .config.minmax = { 0, OSD_POSCFG_MAX } },
-    { "osd_battery_warning_pos",    VAR_UINT16  | MASTER_VALUE, &osdConfig()->item_pos[OSD_MAIN_BATT_WARNING], .config.minmax = { 0, OSD_POSCFG_MAX } },
-#endif
-#ifdef USE_MAX7456
-    { "vcd_video_system",           VAR_UINT8   | MASTER_VALUE, &vcdProfile()->video_system, .config.minmax = { 0, 2 } },
-    { "vcd_h_offset",               VAR_INT8    | MASTER_VALUE, &vcdProfile()->h_offset, .config.minmax = { -32, 31 } },
-    { "vcd_v_offset",               VAR_INT8    | MASTER_VALUE, &vcdProfile()->v_offset, .config.minmax = { -15, 16 } },
-#endif
-#ifdef USE_MSP_DISPLAYPORT
-    { "displayport_msp_col_adjust", VAR_INT8    | MASTER_VALUE, &displayPortProfileMsp()->colAdjust, .config.minmax = { -6, 0 } },
-    { "displayport_msp_row_adjust", VAR_INT8    | MASTER_VALUE, &displayPortProfileMsp()->rowAdjust, .config.minmax = { -3, 0 } },
-#endif
-#ifdef USE_MAX7456
-    { "displayport_max7456_col_adjust", VAR_INT8    | MASTER_VALUE, &displayPortProfileMax7456()->colAdjust, .config.minmax = { -6, 0 } },
-    { "displayport_max7456_row_adjust", VAR_INT8    | MASTER_VALUE, &displayPortProfileMax7456()->rowAdjust, .config.minmax = { -3, 0 } },
 #endif
 };
 #endif
@@ -1210,12 +1097,6 @@ static telemetryConfig_t telemetryConfigCopy;
 #endif
 static modeActivationCondition_t modeActivationConditionsCopy[MAX_MODE_ACTIVATION_CONDITION_COUNT];
 static adjustmentRange_t adjustmentRangesCopy[MAX_ADJUSTMENT_RANGE_COUNT];
-#ifdef LED_STRIP
-static ledStripConfig_t ledStripConfigCopy;
-#endif
-#ifdef OSD
-static osdConfig_t osdConfigCopy;
-#endif
 static systemConfig_t systemConfigCopy;
 #ifdef BEEPER
 static beeperDevConfig_t beeperDevConfigCopy;
@@ -1500,18 +1381,6 @@ static const cliCurrentAndDefaultConfig_t *getCurrentAndDefaultConfigs(pgn_t pgn
         ret.currentConfig = &telemetryConfigCopy;
         ret.defaultConfig = telemetryConfig();
         break;
-#endif
-#ifdef LED_STRIP
-    case PG_LED_STRIP_CONFIG:
-        ret.currentConfig = &ledStripConfigCopy;
-        ret.defaultConfig = ledStripConfig();
-        break;
-#endif
-#ifdef OSD
-    case PG_OSD_CONFIG:
-       ret.currentConfig = &osdConfigCopy;
-       ret.defaultConfig = osdConfig();
-       break;
 #endif
     case PG_SYSTEM_CONFIG:
         ret.currentConfig = &systemConfigCopy;
@@ -2482,151 +2351,6 @@ static void cliRxRange(char *cmdline)
     }
 }
 
-#ifdef LED_STRIP
-static void printLed(uint8_t dumpMask, const ledConfig_t *ledConfigs, const ledConfig_t *defaultLedConfigs)
-{
-    const char *format = "led %u %s\r\n";
-    char ledConfigBuffer[20];
-    char ledConfigDefaultBuffer[20];
-    for (uint32_t i = 0; i < LED_MAX_STRIP_LENGTH; i++) {
-        ledConfig_t ledConfig = ledConfigs[i];
-        generateLedConfig(&ledConfig, ledConfigBuffer, sizeof(ledConfigBuffer));
-        bool equalsDefault = false;
-        if (defaultLedConfigs) {
-            ledConfig_t ledConfigDefault = defaultLedConfigs[i];
-            equalsDefault = ledConfig == ledConfigDefault;
-            generateLedConfig(&ledConfigDefault, ledConfigDefaultBuffer, sizeof(ledConfigDefaultBuffer));
-            cliDefaultPrintf(dumpMask, equalsDefault, format, i, ledConfigDefaultBuffer);
-        }
-        cliDumpPrintf(dumpMask, equalsDefault, format, i, ledConfigBuffer);
-    }
-}
-
-static void cliLed(char *cmdline)
-{
-    int i;
-    const char *ptr;
-
-    if (isEmpty(cmdline)) {
-        printLed(DUMP_MASTER, ledStripConfig()->ledConfigs, NULL);
-    } else {
-        ptr = cmdline;
-        i = atoi(ptr);
-        if (i < LED_MAX_STRIP_LENGTH) {
-            ptr = nextArg(cmdline);
-            if (!parseLedStripConfig(i, ptr)) {
-                cliShowParseError();
-            }
-        } else {
-            cliShowArgumentRangeError("index", 0, LED_MAX_STRIP_LENGTH - 1);
-        }
-    }
-}
-
-static void printColor(uint8_t dumpMask, const hsvColor_t *colors, const hsvColor_t *defaultColors)
-{
-    const char *format = "color %u %d,%u,%u\r\n";
-    for (uint32_t i = 0; i < LED_CONFIGURABLE_COLOR_COUNT; i++) {
-        const hsvColor_t *color = &colors[i];
-        bool equalsDefault = false;
-        if (defaultColors) {
-            const hsvColor_t *colorDefault = &defaultColors[i];
-            equalsDefault = color->h == colorDefault->h
-                && color->s == colorDefault->s
-                && color->v == colorDefault->v;
-            cliDefaultPrintf(dumpMask, equalsDefault, format, i,colorDefault->h, colorDefault->s, colorDefault->v);
-        }
-        cliDumpPrintf(dumpMask, equalsDefault, format, i, color->h, color->s, color->v);
-    }
-}
-
-static void cliColor(char *cmdline)
-{
-    if (isEmpty(cmdline)) {
-        printColor(DUMP_MASTER, ledStripConfig()->colors, NULL);
-    } else {
-        const char *ptr = cmdline;
-        const int i = atoi(ptr);
-        if (i < LED_CONFIGURABLE_COLOR_COUNT) {
-            ptr = nextArg(cmdline);
-            if (!parseColor(i, ptr)) {
-                cliShowParseError();
-            }
-        } else {
-            cliShowArgumentRangeError("index", 0, LED_CONFIGURABLE_COLOR_COUNT - 1);
-        }
-    }
-}
-
-static void printModeColor(uint8_t dumpMask, const ledStripConfig_t *ledStripConfig, const ledStripConfig_t *defaultLedStripConfig)
-{
-    const char *format = "mode_color %u %u %u\r\n";
-    for (uint32_t i = 0; i < LED_MODE_COUNT; i++) {
-        for (uint32_t j = 0; j < LED_DIRECTION_COUNT; j++) {
-            int colorIndex = ledStripConfig->modeColors[i].color[j];
-            bool equalsDefault = false;
-            if (defaultLedStripConfig) {
-                int colorIndexDefault = defaultLedStripConfig->modeColors[i].color[j];
-                equalsDefault = colorIndex == colorIndexDefault;
-                cliDefaultPrintf(dumpMask, equalsDefault, format, i, j, colorIndexDefault);
-            }
-            cliDumpPrintf(dumpMask, equalsDefault, format, i, j, colorIndex);
-        }
-    }
-
-    for (uint32_t j = 0; j < LED_SPECIAL_COLOR_COUNT; j++) {
-        const int colorIndex = ledStripConfig->specialColors.color[j];
-        bool equalsDefault = false;
-        if (defaultLedStripConfig) {
-            const int colorIndexDefault = defaultLedStripConfig->specialColors.color[j];
-            equalsDefault = colorIndex == colorIndexDefault;
-            cliDefaultPrintf(dumpMask, equalsDefault, format, LED_SPECIAL, j, colorIndexDefault);
-        }
-        cliDumpPrintf(dumpMask, equalsDefault, format, LED_SPECIAL, j, colorIndex);
-    }
-
-    const int ledStripAuxChannel = ledStripConfig->ledstrip_aux_channel;
-    bool equalsDefault = false;
-    if (defaultLedStripConfig) {
-        const int ledStripAuxChannelDefault = defaultLedStripConfig->ledstrip_aux_channel;
-        equalsDefault = ledStripAuxChannel == ledStripAuxChannelDefault;
-        cliDefaultPrintf(dumpMask, equalsDefault, format, LED_AUX_CHANNEL, 0, ledStripAuxChannelDefault);
-    }
-    cliDumpPrintf(dumpMask, equalsDefault, format, LED_AUX_CHANNEL, 0, ledStripAuxChannel);
-}
-
-static void cliModeColor(char *cmdline)
-{
-    if (isEmpty(cmdline)) {
-        printModeColor(DUMP_MASTER, ledStripConfig(), NULL);
-    } else {
-        enum {MODE = 0, FUNCTION, COLOR, ARGS_COUNT};
-        int args[ARGS_COUNT];
-        int argNo = 0;
-        char *saveptr;
-        const char* ptr = strtok_r(cmdline, " ", &saveptr);
-        while (ptr && argNo < ARGS_COUNT) {
-            args[argNo++] = atoi(ptr);
-            ptr = strtok_r(NULL, " ", &saveptr);
-        }
-
-        if (ptr != NULL || argNo != ARGS_COUNT) {
-            cliShowParseError();
-            return;
-        }
-
-        int modeIdx  = args[MODE];
-        int funIdx = args[FUNCTION];
-        int color = args[COLOR];
-        if(!setModeColor(modeIdx, funIdx, color)) {
-            cliShowParseError();
-            return;
-        }
-        // values are validated
-        cliPrintf("mode_color %u %u %u\r\n", modeIdx, funIdx, color);
-    }
-}
-#endif
 
 #ifdef USE_SERVOS
 static void printServo(uint8_t dumpMask, const servoParam_t *servoParams, const servoParam_t *defaultServoParams)
@@ -4082,9 +3806,6 @@ const cliResourceValue_t resourceTable[] = {
     { OWNER_SONAR_TRIGGER, &sonarConfig()->triggerTag, 0 },
     { OWNER_SONAR_ECHO,    &sonarConfig()->echoTag,    0 },
 #endif
-#ifdef LED_STRIP
-    { OWNER_LED_STRIP,     &ledStripConfig()->ioTag,   0 },
-#endif
     { OWNER_SERIAL_TX,     &serialPinConfig()->ioTagTx[0], SERIAL_PORT_MAX_INDEX },
     { OWNER_SERIAL_RX,     &serialPinConfig()->ioTagRx[0], SERIAL_PORT_MAX_INDEX },
 #endif
@@ -4429,17 +4150,6 @@ static void printConfig(char *cmdline, bool doDiff)
         cliPrintHashLine("serial");
         printSerial(dumpMask, serialConfig(), &defaultConfig.serialConfig);
 
-#ifdef LED_STRIP
-        cliPrintHashLine("led");
-        printLed(dumpMask, ledStripConfig()->ledConfigs, defaultConfig.ledStripConfig.ledConfigs);
-
-        cliPrintHashLine("color");
-        printColor(dumpMask, ledStripConfig()->colors, defaultConfig.ledStripConfig.colors);
-
-        cliPrintHashLine("mode_color");
-        printModeColor(dumpMask, ledStripConfig(), &defaultConfig.ledStripConfig);
-#endif
-
         cliPrintHashLine("aux");
         printAux(dumpMask, modeActivationConditions(0), defaultConfig.modeActivationProfile.modeActivationConditions);
 
@@ -4545,9 +4255,6 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("beeper", "turn on/off beeper", "list\r\n"
         "\t<+|->[name]", cliBeeper),
 #endif
-#ifdef LED_STRIP
-    CLI_COMMAND_DEF("color", "configure colors", NULL, cliColor),
-#endif
     CLI_COMMAND_DEF("defaults", "reset to defaults and reboot", NULL, cliDefaults),
     CLI_COMMAND_DEF("bl", "reboot into bootloader", NULL, cliBootloader),
     CLI_COMMAND_DEF("diff", "list configuration changes from default",
@@ -4577,17 +4284,11 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("gpspassthrough", "passthrough gps to serial", NULL, cliGpsPassthrough),
 #endif
     CLI_COMMAND_DEF("help", NULL, NULL, cliHelp),
-#ifdef LED_STRIP
-    CLI_COMMAND_DEF("led", "configure leds", NULL, cliLed),
-#endif
     CLI_COMMAND_DEF("map", "configure rc channel order", "[<map>]", cliMap),
 #ifndef USE_QUAD_MIXER_ONLY
     CLI_COMMAND_DEF("mixer", "configure mixer", "list\r\n\t<name>", cliMixer),
 #endif
     CLI_COMMAND_DEF("mmix", "custom motor mixer", NULL, cliMotorMix),
-#ifdef LED_STRIP
-    CLI_COMMAND_DEF("mode_color", "configure mode and special colors", NULL, cliModeColor),
-#endif
     CLI_COMMAND_DEF("motor",  "get/set motor", "<index> [<value>]", cliMotor),
     CLI_COMMAND_DEF("name", "name of craft", NULL, cliName),
 #ifndef MINIMAL_CLI

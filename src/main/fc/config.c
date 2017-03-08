@@ -40,8 +40,6 @@
 #include "drivers/accgyro.h"
 #include "drivers/compass.h"
 #include "drivers/io.h"
-#include "drivers/light_ws2811strip.h"
-#include "drivers/max7456.h"
 #include "drivers/pwm_esc_detect.h"
 #include "drivers/pwm_output.h"
 #include "drivers/rx_pwm.h"
@@ -70,7 +68,6 @@
 #include "io/beeper.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
-#include "io/ledstrip.h"
 #include "io/motors.h"
 #include "io/serial.h"
 
@@ -273,25 +270,7 @@ void resetBarometerConfig(barometerConfig_t *barometerConfig)
 }
 #endif
 
-#ifdef LED_STRIP
-void resetLedStripConfig(ledStripConfig_t *ledStripConfig)
-{
-    applyDefaultColors(ledStripConfig->colors);
-    applyDefaultLedStripConfig(ledStripConfig->ledConfigs);
-    applyDefaultModeColors(ledStripConfig->modeColors);
-    applyDefaultSpecialColors(&(ledStripConfig->specialColors));
-    ledStripConfig->ledstrip_visual_beeper = 0;
-    ledStripConfig->ledstrip_aux_channel = THROTTLE;
 
-    for (int i = 0; i < USABLE_TIMER_CHANNEL_COUNT; i++) {
-        if (timerHardware[i].usageFlags & TIM_USE_LED) {
-            ledStripConfig->ioTag = timerHardware[i].tag;
-            return;
-        }
-    }
-    ledStripConfig->ioTag = IO_TAG_NONE;
-}
-#endif
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
@@ -739,23 +718,6 @@ void resetMixerConfig(mixerConfig_t *mixerConfig)
 }
 #endif
 
-#ifndef USE_PARAMETER_GROUPS
-#ifdef USE_MAX7456
-void resetMax7456Config(vcdProfile_t *pVcdProfile)
-{
-    pVcdProfile->video_system = VIDEO_SYSTEM_AUTO;
-    pVcdProfile->h_offset = 0;
-    pVcdProfile->v_offset = 0;
-}
-#endif
-
-void resetDisplayPortProfile(displayPortProfile_t *pDisplayPortProfile)
-{
-    pDisplayPortProfile->colAdjust = 0;
-    pDisplayPortProfile->rowAdjust = 0;
-}
-#endif // USE_PARAMETER_GROUPS
-
 #ifdef USE_PARAMETER_GROUPS
 void pgResetFn_statusLedConfig(statusLedConfig_t *statusLedConfig)
 #else
@@ -840,23 +802,6 @@ void createDefaultConfig(master_t *config)
 #ifdef DEFAULT_FEATURES
     intFeatureSet(DEFAULT_FEATURES, featuresPtr);
 #endif
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef USE_MSP_DISPLAYPORT
-    resetDisplayPortProfile(&config->displayPortProfileMsp);
-#endif
-#ifdef USE_MAX7456
-    resetDisplayPortProfile(&config->displayPortProfileMax7456);
-#endif
-
-#ifdef USE_MAX7456
-    resetMax7456Config(&config->vcdProfile);
-#endif
-
-#ifdef OSD
-    osdResetConfig(&config->osdConfig);
-#endif
-#endif // USE_PARAMETER_GROUPS
 
 #ifdef BOARD_HAS_VOLTAGE_DIVIDER
     // only enable the VBAT feature by default if the board has a voltage divider otherwise
@@ -1013,10 +958,6 @@ void createDefaultConfig(master_t *config)
 #endif
     resetFlight3DConfig(&config->flight3DConfig);
 
-#ifdef LED_STRIP
-    resetLedStripConfig(&config->ledStripConfig);
-#endif
-
 #ifdef GPS
     // gps/nav stuff
     config->gpsConfig.provider = GPS_NMEA;
@@ -1141,10 +1082,6 @@ void resetConfigs(void)
 
     setPidProfile(0);
     setControlRateProfile(0);
-
-#ifdef LED_STRIP
-    reevaluateLedConfig();
-#endif
 }
 
 void activateConfig(void)

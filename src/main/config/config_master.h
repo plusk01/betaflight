@@ -30,7 +30,6 @@
 #include "drivers/vcd.h"
 #include "drivers/light_led.h"
 #include "drivers/flash.h"
-#include "drivers/display.h"
 #include "drivers/serial.h"
 
 #include "fc/config.h"
@@ -50,7 +49,6 @@
 #include "io/beeper.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
-#include "io/ledstrip.h"
 #include "io/serial.h"
 
 #include "rx/rx.h"
@@ -98,12 +96,9 @@
 #define adcConfig(x) (&masterConfig.adcConfig)
 #define beeperDevConfig(x) (&masterConfig.beeperDevConfig)
 #define sonarConfig(x) (&masterConfig.sonarConfig)
-#define ledStripConfig(x) (&masterConfig.ledStripConfig)
 #define statusLedConfig(x) (&masterConfig.statusLedConfig)
-#define osdConfig(x) (&masterConfig.osdConfig)
 #define vcdProfile(x) (&masterConfig.vcdProfile)
 #define sdcardConfig(x) (&masterConfig.sdcardConfig)
-#define blackboxConfig(x) (&masterConfig.blackboxConfig)
 #define flashConfig(x) (&masterConfig.flashConfig)
 #define pidConfig(x) (&masterConfig.pidConfig)
 #define adjustmentProfile(x) (&masterConfig.adjustmentProfile)
@@ -111,10 +106,6 @@
 #define servoProfile(x) (&masterConfig.servoProfile)
 #define customMotorMixer(i) (&masterConfig.customMotorMixer[i])
 #define customServoMixers(i) (&masterConfig.customServoMixer[i])
-#define displayPortProfileMsp(x) (&masterConfig.displayPortProfileMsp)
-#define displayPortProfileMax7456(x) (&masterConfig.displayPortProfileMax7456)
-#define displayPortProfileOled(x) (&masterConfig.displayPortProfileOled)
-#define vtxConfig(x) (&masterConfig.vtxConfig)
 #define beeperConfig(x) (&masterConfig.beeperConfig)
 
 #define featureConfigMutable(x) (&masterConfig.featureConfig)
@@ -148,7 +139,6 @@
 #define adcConfigMutable(x) (&masterConfig.adcConfig)
 #define beeperDevConfigMutable(x) (&masterConfig.beeperDevConfig)
 #define sonarConfigMutable(x) (&masterConfig.sonarConfig)
-#define ledStripConfigMutable(x) (&masterConfig.ledStripConfig)
 #define statusLedConfigMutable(x) (&masterConfig.statusLedConfig)
 #define osdConfigMutable(x) (&masterConfig.osdConfig)
 #define vcdProfileMutable(x) (&masterConfig.vcdProfile)
@@ -161,10 +151,6 @@
 #define servoProfileMutable(x) (&masterConfig.servoProfile)
 #define customMotorMixerMutable(i) (&masterConfig.customMotorMixer[i])
 #define customServoMixersMutable(i) (&masterConfig.customServoMixer[i])
-#define displayPortProfileMspMutable(x) (&masterConfig.displayPortProfileMsp)
-#define displayPortProfileMax7456Mutable(x) (&masterConfig.displayPortProfileMax7456)
-#define displayPortProfileOledMutable(x) (&masterConfig.displayPortProfileOled)
-#define vtxConfigMutable(x) (&masterConfig.vtxConfig)
 #define beeperConfigMutable(x) (&masterConfig.beeperConfig)
 
 #define servoParams(i) (&servoProfile()->servoConf[i])
@@ -264,21 +250,6 @@ typedef struct master_s {
 #ifdef SONAR
     sonarConfig_t sonarConfig;
 #endif
-
-#ifdef LED_STRIP
-    ledStripConfig_t ledStripConfig;
-#endif
-
-#ifdef USE_MAX7456
-    vcdProfile_t vcdProfile;
-#endif
-
-#ifdef USE_MSP_DISPLAYPORT
-    displayPortProfile_t displayPortProfileMsp;
-#endif
-#ifdef USE_MAX7456
-    displayPortProfile_t displayPortProfileMax7456;
-# endif
 
 #ifdef USE_SDCARD
     sdcardConfig_t sdcardConfig;
