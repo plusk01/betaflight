@@ -16,7 +16,7 @@
 #
 
 # The target to build, see VALID_TARGETS below
-TARGET    ?= NAZE
+TARGET    ?= SPRACINGF3EVO
 
 # Compile-time options
 OPTIONS   ?=
@@ -646,16 +646,6 @@ COMMON_SRC = \
             sensors/gyro.c \
             sensors/gyroanalyse.c \
             sensors/initialisation.c \
-            blackbox/blackbox.c \
-            blackbox/blackbox_io.c \
-            cms/cms.c \
-            cms/cms_menu_blackbox.c \
-            cms/cms_menu_builtin.c \
-            cms/cms_menu_imu.c \
-            cms/cms_menu_ledstrip.c \
-            cms/cms_menu_misc.c \
-            cms/cms_menu_osd.c \
-            cms/cms_menu_vtx.c \
             common/colorconversion.c \
             common/gps_conversion.c \
             drivers/display_ug2864hsweg01.c \
@@ -671,8 +661,6 @@ COMMON_SRC = \
             io/displayport_oled.c \
             io/gps.c \
             io/ledstrip.c \
-            io/osd.c \
-            io/transponder_ir.c \
             sensors/sonar.c \
             sensors/barometer.c \
             telemetry/telemetry.c \
@@ -685,9 +673,6 @@ COMMON_SRC = \
             telemetry/mavlink.c \
             telemetry/ibus.c \
             sensors/esc_sensor.c \
-            io/vtx_string.c \
-            io/vtx_smartaudio.c \
-            io/vtx_tramp.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC)
 

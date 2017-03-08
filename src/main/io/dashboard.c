@@ -35,8 +35,6 @@
 #include "drivers/display.h"
 #include "drivers/display_ug2864hsweg01.h"
 
-#include "cms/cms.h"
-
 #include "common/printf.h"
 #include "common/maths.h"
 #include "common/axis.h"
@@ -703,11 +701,6 @@ void dashboardInit(void)
     delay(200);
 
     displayPort = displayPortOledInit();
-#if defined(CMS)
-    if (dashboardPresent) {
-        cmsDisplayPortRegister(displayPort);
-    }
-#endif
 
     memset(&pageState, 0, sizeof(pageState));
     dashboardSetPage(PAGE_WELCOME);

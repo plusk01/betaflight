@@ -32,7 +32,6 @@
 #include "drivers/vcd.h"
 
 #include "io/displayport_max7456.h"
-#include "io/osd.h"
 
 displayPort_t max7456DisplayPort;
 

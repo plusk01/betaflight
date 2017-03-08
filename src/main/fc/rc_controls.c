@@ -23,8 +23,6 @@
 
 #include "platform.h"
 
-#include "blackbox/blackbox.h"
-
 #include "build/build_config.h"
 
 #include "common/axis.h"
@@ -45,7 +43,6 @@
 #include "io/gps.h"
 #include "io/beeper.h"
 #include "io/motors.h"
-#include "io/vtx.h"
 #include "io/dashboard.h"
 
 #include "sensors/barometer.h"

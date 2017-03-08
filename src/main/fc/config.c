@@ -25,10 +25,6 @@
 #include "build/build_config.h"
 #include "build/debug.h"
 
-#include "blackbox/blackbox_io.h"
-
-#include "cms/cms.h"
-
 #include "common/axis.h"
 #include "common/color.h"
 #include "common/filter.h"
@@ -76,10 +72,7 @@
 #include "io/gps.h"
 #include "io/ledstrip.h"
 #include "io/motors.h"
-#include "io/osd.h"
 #include "io/serial.h"
-#include "io/servos.h"
-#include "io/vtx.h"
 
 #include "rx/rx.h"
 #include "rx/rx_spi.h"
@@ -1113,29 +1106,6 @@ void createDefaultConfig(master_t *config)
     config->vtxConfig.vtx_mode = 0;    //CH+BAND mode
     config->vtxConfig.vtx_mhz = 5740;  //F0
 #endif
-#endif
-
-#ifdef TRANSPONDER
-    static const uint8_t defaultTransponderData[6] = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC }; // Note, this is NOT a valid transponder code, it's just for testing production hardware
-
-    memcpy(config->transponderConfig.data, &defaultTransponderData, sizeof(defaultTransponderData));
-#endif
-
-#ifndef USE_PARAMETER_GROUPS
-#ifdef BLACKBOX
-#if defined(ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT)
-    intFeatureSet(FEATURE_BLACKBOX, featuresPtr);
-    config->blackboxConfig.device = BLACKBOX_DEVICE_FLASH;
-#elif defined(ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT)
-    intFeatureSet(FEATURE_BLACKBOX, featuresPtr);
-    config->blackboxConfig.device = BLACKBOX_DEVICE_SDCARD;
-#else
-    config->blackboxConfig.device = BLACKBOX_DEVICE_SERIAL;
-#endif
-    config->blackboxConfig.rate_num = 1;
-    config->blackboxConfig.rate_denom = 1;
-    config->blackboxConfig.on_motor_test = 0; // default off
-#endif // BLACKBOX
 #endif
 
 #ifdef SERIALRX_UART

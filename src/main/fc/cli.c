@@ -33,13 +33,9 @@ extern uint8_t __config_end;
 
 #ifdef USE_CLI
 
-#include "blackbox/blackbox.h"
-
 #include "build/build_config.h"
 #include "build/debug.h"
 #include "build/version.h"
-
-#include "cms/cms.h"
 
 #include "common/axis.h"
 #include "common/color.h"
@@ -94,9 +90,7 @@ extern uint8_t __config_end;
 #include "io/gimbal.h"
 #include "io/gps.h"
 #include "io/ledstrip.h"
-#include "io/osd.h"
 #include "io/serial.h"
-#include "io/vtx.h"
 
 #include "rx/rx.h"
 #include "rx/spektrum.h"
@@ -570,14 +564,6 @@ static const clivalue_t valueTable[] = {
 // PG_PWM_CONFIG
 #if defined(USE_PWM)
     { "input_filtering_mode",       VAR_INT8   | MASTER_VALUE | MODE_LOOKUP,  .config.lookup = { TABLE_OFF_ON }, PG_PWM_CONFIG, offsetof(pwmConfig_t, inputFilteringMode) },
-#endif
-
-// PG_BLACKBOX_CONFIG
-#ifdef BLACKBOX
-    { "blackbox_rate_num",          VAR_UINT8  | MASTER_VALUE, .config.minmax = { 1, 32 }, PG_BLACKBOX_CONFIG, offsetof(blackboxConfig_t, rate_num) },
-    { "blackbox_rate_denom",        VAR_UINT8  | MASTER_VALUE, .config.minmax = { 1, 32 }, PG_BLACKBOX_CONFIG, offsetof(blackboxConfig_t, rate_denom) },
-    { "blackbox_device",            VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_BLACKBOX_DEVICE }, PG_BLACKBOX_CONFIG, offsetof(blackboxConfig_t, device) },
-    { "blackbox_on_motor_test",     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_BLACKBOX_CONFIG, offsetof(blackboxConfig_t, on_motor_test) },
 #endif
 
 // PG_MOTOR_CONFIG
@@ -1117,20 +1103,6 @@ static const clivalue_t valueTable[] = {
     { "level_sensitivity",          VAR_UINT8  | PROFILE_VALUE, &pidProfiles(0)->levelSensitivity, .config.minmax = { 10,  200 } },
     { "level_limit",                VAR_UINT8  | PROFILE_VALUE, &pidProfiles(0)->levelAngleLimit, .config.minmax = { 10,  120 } },
 
-#ifdef BLACKBOX
-    { "blackbox_rate_num",          VAR_UINT8  | MASTER_VALUE,  &blackboxConfig()->rate_num, .config.minmax = { 1,  32 } },
-    { "blackbox_rate_denom",        VAR_UINT8  | MASTER_VALUE,  &blackboxConfig()->rate_denom, .config.minmax = { 1,  32 } },
-    { "blackbox_device",            VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &blackboxConfig()->device, .config.lookup = { TABLE_BLACKBOX_DEVICE } },
-    { "blackbox_on_motor_test",     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &blackboxConfig()->on_motor_test, .config.lookup = { TABLE_OFF_ON } },
-#endif
-
-#ifdef VTX
-    { "vtx_band",                   VAR_UINT8  | MASTER_VALUE,  &vtxConfig()->vtx_band, .config.minmax = { 1, 5 } },
-    { "vtx_channel",                VAR_UINT8  | MASTER_VALUE,  &vtxConfig()->vtx_channel, .config.minmax = { 1, 8 } },
-    { "vtx_mode",                   VAR_UINT8  | MASTER_VALUE,  &vtxConfig()->vtx_mode, .config.minmax = { 0, 2 } },
-    { "vtx_mhz",                    VAR_UINT16 | MASTER_VALUE,  &vtxConfig()->vtx_mhz, .config.minmax = { 5600, 5950 } },
-#endif
-
 #ifdef MAG
     { "magzero_x",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[X], .config.minmax = { INT16_MIN,  INT16_MAX } },
     { "magzero_y",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[Y], .config.minmax = { INT16_MIN,  INT16_MAX } },
@@ -1207,9 +1179,6 @@ static pitotmeterConfig_t pitotmeterConfigCopy;
 #endif
 static featureConfig_t featureConfigCopy;
 static rxConfig_t rxConfigCopy;
-#ifdef BLACKBOX
-static blackboxConfig_t blackboxConfigCopy;
-#endif
 static rxFailsafeChannelConfig_t rxFailsafeChannelConfigsCopy[MAX_SUPPORTED_RC_CHANNEL_COUNT];
 static rxChannelRangeConfig_t rxChannelRangeConfigsCopy[NON_AUX_CHANNEL_COUNT];
 static motorConfig_t motorConfigCopy;
@@ -1460,12 +1429,6 @@ static const cliCurrentAndDefaultConfig_t *getCurrentAndDefaultConfigs(pgn_t pgn
         ret.currentConfig = &rxConfigCopy;
         ret.defaultConfig = rxConfig();
         break;
-#ifdef BLACKBOX
-    case PG_BLACKBOX_CONFIG:
-        ret.currentConfig = &blackboxConfigCopy;
-        ret.defaultConfig = blackboxConfig();
-        break;
-#endif
     case PG_MOTOR_CONFIG:
         ret.currentConfig = &motorConfigCopy;
         ret.defaultConfig = motorConfig();

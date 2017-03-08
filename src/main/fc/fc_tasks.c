@@ -21,8 +21,6 @@
 
 #include <platform.h>
 
-#include "cms/cms.h"
-
 #include "common/axis.h"
 #include "common/color.h"
 #include "common/utils.h"
@@ -57,10 +55,7 @@
 #include "io/dashboard.h"
 #include "io/gps.h"
 #include "io/ledstrip.h"
-#include "io/osd.h"
 #include "io/serial.h"
-#include "io/transponder_ir.h"
-#include "io/vtx_tramp.h" // Will be gone
 
 #include "msp/msp_serial.h"
 
@@ -427,15 +422,6 @@ cfTask_t cfTasks[TASK_COUNT] = {
     },
 #endif
 
-#ifdef TRANSPONDER
-    [TASK_TRANSPONDER] = {
-        .taskName = "TRANSPONDER",
-        .taskFunc = transponderUpdate,
-        .desiredPeriod = TASK_PERIOD_HZ(250),       // 250 Hz, 4ms
-        .staticPriority = TASK_PRIORITY_LOW,
-    },
-#endif
-
 #ifdef USE_DASHBOARD
     [TASK_DASHBOARD] = {
         .taskName = "DASHBOARD",
@@ -484,15 +470,6 @@ cfTask_t cfTasks[TASK_COUNT] = {
         .taskName = "ESC_SENSOR",
         .taskFunc = escSensorProcess,
         .desiredPeriod = TASK_PERIOD_HZ(100),       // 100 Hz, 10ms
-        .staticPriority = TASK_PRIORITY_LOW,
-    },
-#endif
-
-#ifdef CMS
-    [TASK_CMS] = {
-        .taskName = "CMS",
-        .taskFunc = cmsHandler,
-        .desiredPeriod = TASK_PERIOD_HZ(60),        // 60 Hz
         .staticPriority = TASK_PRIORITY_LOW,
     },
 #endif

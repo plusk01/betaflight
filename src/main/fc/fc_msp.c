@@ -22,8 +22,6 @@
 
 #include "platform.h"
 
-#include "blackbox/blackbox.h"
-
 #include "build/build_config.h"
 #include "build/debug.h"
 #include "build/version.h"
@@ -78,11 +76,8 @@
 #include "io/gps.h"
 #include "io/ledstrip.h"
 #include "io/motors.h"
-#include "io/osd.h"
 #include "io/serial.h"
 #include "io/serial_4way.h"
-#include "io/servos.h"
-#include "io/transponder_ir.h"
 
 #include "msp/msp.h"
 #include "msp/msp_protocol.h"
@@ -1041,55 +1036,8 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
         serializeDataflashSummaryReply(dst);
         break;
 
-    case MSP_BLACKBOX_CONFIG:
-#ifdef BLACKBOX
-        sbufWriteU8(dst, 1); //Blackbox supported
-        sbufWriteU8(dst, blackboxConfig()->device);
-        sbufWriteU8(dst, blackboxConfig()->rate_num);
-        sbufWriteU8(dst, blackboxConfig()->rate_denom);
-#else
-        sbufWriteU8(dst, 0); // Blackbox not supported
-        sbufWriteU8(dst, 0);
-        sbufWriteU8(dst, 0);
-        sbufWriteU8(dst, 0);
-#endif
-        break;
-
     case MSP_SDCARD_SUMMARY:
         serializeSDCardSummaryReply(dst);
-        break;
-
-    case MSP_TRANSPONDER_CONFIG:
-#ifdef TRANSPONDER
-        sbufWriteU8(dst, 1); //Transponder supported
-        for (unsigned int i = 0; i < sizeof(transponderConfig()->data); i++) {
-            sbufWriteU8(dst, transponderConfig()->data[i]);
-        }
-#else
-        sbufWriteU8(dst, 0); // Transponder not supported
-#endif
-        break;
-
-    case MSP_OSD_CONFIG:
-#ifdef OSD
-        sbufWriteU8(dst, 1); // OSD supported
-        // send video system (AUTO/PAL/NTSC)
-#ifdef USE_MAX7456
-        sbufWriteU8(dst, vcdProfile()->video_system);
-#else
-        sbufWriteU8(dst, 0);
-#endif
-        sbufWriteU8(dst, osdConfig()->units);
-        sbufWriteU8(dst, osdConfig()->rssi_alarm);
-        sbufWriteU16(dst, osdConfig()->cap_alarm);
-        sbufWriteU16(dst, osdConfig()->time_alarm);
-        sbufWriteU16(dst, osdConfig()->alt_alarm);
-        for (int i = 0; i < OSD_ITEM_COUNT; i++) {
-            sbufWriteU16(dst, osdConfig()->item_pos[i]);
-        }
-#else
-        sbufWriteU8(dst, 0); // OSD not supported
-#endif
         break;
 
     case MSP_BF_BUILD_INFO:
@@ -1587,75 +1535,6 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         writeEEPROM();
         readEEPROM();
         break;
-
-#ifdef BLACKBOX
-    case MSP_SET_BLACKBOX_CONFIG:
-        // Don't allow config to be updated while Blackbox is logging
-        if (blackboxMayEditConfig()) {
-            blackboxConfigMutable()->device = sbufReadU8(src);
-            blackboxConfigMutable()->rate_num = sbufReadU8(src);
-            blackboxConfigMutable()->rate_denom = sbufReadU8(src);
-        }
-        break;
-#endif
-
-#ifdef TRANSPONDER
-    case MSP_SET_TRANSPONDER_CONFIG:
-        if (dataSize != sizeof(transponderConfig()->data)) {
-            return MSP_RESULT_ERROR;
-        }
-        for (unsigned int i = 0; i < sizeof(transponderConfig()->data); i++) {
-            transponderConfigMutable()->data[i] = sbufReadU8(src);
-        }
-        transponderUpdateData();
-        break;
-#endif
-
-#ifdef OSD
-    case MSP_SET_OSD_CONFIG:
-        {
-            const uint8_t addr = sbufReadU8(src);
-            // set all the other settings
-            if ((int8_t)addr == -1) {
-#ifdef USE_MAX7456
-                vcdProfileMutable()->video_system = sbufReadU8(src);
-#else
-                sbufReadU8(src); // Skip video system
-#endif
-                osdConfigMutable()->units = sbufReadU8(src);
-                osdConfigMutable()->rssi_alarm = sbufReadU8(src);
-                osdConfigMutable()->cap_alarm = sbufReadU16(src);
-                osdConfigMutable()->time_alarm = sbufReadU16(src);
-                osdConfigMutable()->alt_alarm = sbufReadU16(src);
-            } else {
-                // set a position setting
-                const uint16_t pos  = sbufReadU16(src);
-                if (addr < OSD_ITEM_COUNT) {
-                    osdConfigMutable()->item_pos[addr] = pos;
-                }
-            }
-        }
-        break;
-    case MSP_OSD_CHAR_WRITE:
-#ifdef USE_MAX7456
-        {
-            uint8_t font_data[64];
-            const uint8_t addr = sbufReadU8(src);
-            for (int i = 0; i < 54; i++) {
-                font_data[i] = sbufReadU8(src);
-            }
-            // !!TODO - replace this with a device independent implementation
-            max7456WriteNvm(addr, font_data);
-        }
-#else
-        // just discard the data
-        sbufReadU8(src);
-        for (int i = 0; i < 54; i++) {
-            sbufReadU8(src);
-        }
-#endif
-        break;
-#endif
 
 #if defined(USE_RTC6705) || defined(VTX_COMMON)
     case MSP_SET_VTX_CONFIG:

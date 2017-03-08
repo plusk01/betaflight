@@ -34,7 +34,6 @@
 
 #include "io/beeper.h"
 #include "io/statusindicator.h"
-#include "io/vtx.h"
 
 #ifdef GPS
 #include "io/gps.h"

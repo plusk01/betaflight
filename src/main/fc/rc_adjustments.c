@@ -23,8 +23,6 @@
 
 #include "platform.h"
 
-#include "blackbox/blackbox.h"
-
 #include "build/build_config.h"
 
 #include "common/axis.h"
@@ -56,37 +54,9 @@ static pidProfile_t *pidProfile;
 
 static void blackboxLogInflightAdjustmentEvent(adjustmentFunction_e adjustmentFunction, int32_t newValue)
 {
-#ifndef BLACKBOX
     UNUSED(adjustmentFunction);
     UNUSED(newValue);
-#else
-    if (feature(FEATURE_BLACKBOX)) {
-        flightLogEvent_inflightAdjustment_t eventData;
-        eventData.adjustmentFunction = adjustmentFunction;
-        eventData.newValue = newValue;
-        eventData.floatFlag = false;
-        blackboxLogEvent(FLIGHT_LOG_EVENT_INFLIGHT_ADJUSTMENT, (flightLogEventData_t*)&eventData);
-    }
-#endif
 }
-
-#if 0
-static void blackboxLogInflightAdjustmentEventFloat(adjustmentFunction_e adjustmentFunction, float newFloatValue)
-{
-#ifndef BLACKBOX
-    UNUSED(adjustmentFunction);
-    UNUSED(newFloatValue);
-#else
-    if (feature(FEATURE_BLACKBOX)) {
-        flightLogEvent_inflightAdjustment_t eventData;
-        eventData.adjustmentFunction = adjustmentFunction;
-        eventData.newFloatValue = newFloatValue;
-        eventData.floatFlag = true;
-        blackboxLogEvent(FLIGHT_LOG_EVENT_INFLIGHT_ADJUSTMENT, (flightLogEventData_t*)&eventData);
-    }
-#endif
-}
-#endif
 
 static uint8_t adjustmentStateMask = 0;
 

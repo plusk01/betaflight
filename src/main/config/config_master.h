@@ -22,10 +22,6 @@
 #include "config/config_profile.h"
 #include "config/feature.h"
 
-#include "blackbox/blackbox.h"
-
-#include "cms/cms.h"
-
 #include "drivers/adc.h"
 #include "drivers/rx_pwm.h"
 #include "drivers/sound_beeper.h"
@@ -55,11 +51,7 @@
 #include "io/gimbal.h"
 #include "io/gps.h"
 #include "io/ledstrip.h"
-#include "io/osd.h"
 #include "io/serial.h"
-#include "io/servos.h"
-#include "io/transponder_ir.h"
-#include "io/vtx.h"
 
 #include "rx/rx.h"
 
@@ -124,7 +116,6 @@
 #define displayPortProfileOled(x) (&masterConfig.displayPortProfileOled)
 #define vtxConfig(x) (&masterConfig.vtxConfig)
 #define beeperConfig(x) (&masterConfig.beeperConfig)
-#define transponderConfig(x) (&masterConfig.transponderConfig)
 
 #define featureConfigMutable(x) (&masterConfig.featureConfig)
 #define systemConfigMutable(x) (&masterConfig.systemConfig)
@@ -175,7 +166,6 @@
 #define displayPortProfileOledMutable(x) (&masterConfig.displayPortProfileOled)
 #define vtxConfigMutable(x) (&masterConfig.vtxConfig)
 #define beeperConfigMutable(x) (&masterConfig.beeperConfig)
-#define transponderConfigMutable(x) (&masterConfig.transponderConfig)
 
 #define servoParams(i) (&servoProfile()->servoConf[i])
 #define adjustmentRanges(i) (&adjustmentProfile()->adjustmentRanges[i])
@@ -279,14 +269,6 @@ typedef struct master_s {
     ledStripConfig_t ledStripConfig;
 #endif
 
-#ifdef TRANSPONDER
-    transponderConfig_t transponderConfig;
-#endif
-
-#ifdef OSD
-    osdConfig_t osdConfig;
-#endif
-
 #ifdef USE_MAX7456
     vcdProfile_t vcdProfile;
 #endif
@@ -309,9 +291,6 @@ typedef struct master_s {
     adjustmentProfile_t adjustmentProfile;
 #if defined(USE_RTC6705) || defined(VTX)
     vtxConfig_t vtxConfig;
-#endif
-#ifdef BLACKBOX
-    blackboxConfig_t blackboxConfig;
 #endif
 
 #ifdef USE_FLASHFS

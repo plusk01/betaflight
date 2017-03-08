@@ -21,8 +21,6 @@
 
 #include "platform.h"
 
-#include "blackbox/blackbox.h"
-
 #include "common/axis.h"
 #include "common/color.h"
 #include "common/maths.h"
@@ -33,9 +31,6 @@
 #include "config/feature.h"
 #include "config/parameter_group.h"
 #include "config/parameter_group_ids.h"
-
-#include "cms/cms.h"
-#include "cms/cms_types.h"
 
 #include "drivers/nvic.h"
 #include "drivers/sensor.h"
@@ -61,7 +56,6 @@
 #include "drivers/sonar_hcsr04.h"
 #include "drivers/sdcard.h"
 #include "drivers/usb_io.h"
-#include "drivers/transponder_ir.h"
 #include "drivers/exti.h"
 #include "drivers/vtx_soft_spi_rtc6705.h"
 
@@ -88,17 +82,11 @@
 #include "io/flashfs.h"
 #include "io/gps.h"
 #include "io/motors.h"
-#include "io/servos.h"
 #include "io/gimbal.h"
 #include "io/ledstrip.h"
 #include "io/dashboard.h"
 #include "io/asyncfatfs/asyncfatfs.h"
-#include "io/transponder_ir.h"
-#include "io/osd.h"
 #include "io/displayport_msp.h"
-#include "io/vtx.h"
-#include "io/vtx_smartaudio.h"
-#include "io/vtx_tramp.h"
 
 #include "scheduler/scheduler.h"
 
@@ -386,10 +374,6 @@ void init(void)
 
     initBoardAlignment(boardAlignment());
 
-#ifdef CMS
-    cmsInit();
-#endif
-
 #ifdef USE_DASHBOARD
     if (feature(FEATURE_DASHBOARD)) {
         dashboardInit();
@@ -435,10 +419,6 @@ void init(void)
     mspFcInit();
     mspSerialInit();
 
-#if defined(USE_MSP_DISPLAYPORT) && defined(CMS)
-    cmsDisplayPortRegister(displayPortMspInit());
-#endif
-
 #ifdef USE_CLI
     cliInit(serialConfig());
 #endif
@@ -446,19 +426,6 @@ void init(void)
     failsafeInit();
 
     rxInit();
-
-#ifdef OSD
-    //The OSD need to be initialised after GYRO to avoid GYRO initialisation failure on some targets
-    if (feature(FEATURE_OSD)) {
-#if defined(USE_MAX7456)
-        // if there is a max7456 chip for the OSD then use it, otherwise use MSP
-        displayPort_t *osdDisplayPort = max7456DisplayPortInit(vcdProfile());
-#elif defined(USE_MSP_DISPLAYPORT)
-        displayPort_t *osdDisplayPort = displayPortMspInit();
-#endif
-        osdInit(osdDisplayPort);
-    }
-#endif
 
 #ifdef GPS
     if (feature(FEATURE_GPS)) {
@@ -491,14 +458,6 @@ void init(void)
     usbCableDetectInit();
 #endif
 
-#ifdef TRANSPONDER
-    if (feature(FEATURE_TRANSPONDER)) {
-        transponderInit();
-        transponderStartRepeating();
-        systemState |= SYSTEM_STATE_TRANSPONDER_ENABLED;
-    }
-#endif
-
 #ifdef USE_FLASHFS
     if (blackboxConfig()->device == BLACKBOX_DEVICE_FLASH) {
 #if defined(USE_FLASH_M25P16)
@@ -508,18 +467,6 @@ void init(void)
     }
 #endif
 
-#ifdef USE_SDCARD
-    if (feature(FEATURE_SDCARD) && blackboxConfig()->device == BLACKBOX_DEVICE_SDCARD) {
-        sdcardInsertionDetectInit();
-        sdcard_init(sdcardConfig()->useDma);
-        afatfs_init();
-    }
-#endif
-
-#ifdef BLACKBOX
-    initBlackbox();
-#endif
-
     if (mixerConfig()->mixerMode == MIXER_GIMBAL) {
         accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
     }
@@ -527,18 +474,6 @@ void init(void)
 #ifdef BARO
     baroSetCalibrationCycles(CALIBRATING_BARO_CYCLES);
 #endif
-
-#ifdef VTX_CONTROL
-
-#ifdef VTX_SMARTAUDIO
-    smartAudioInit();
-#endif
-
-#ifdef VTX_TRAMP
-    trampInit();
-#endif
-
-#endif // VTX_CONTROL
 
     // start all timers
     // TODO - not implemented yet

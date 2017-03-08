@@ -22,8 +22,6 @@
 
 #include "build/debug.h"
 
-#include "blackbox/blackbox.h"
-
 #include "common/axis.h"
 #include "common/filter.h"
 #include "common/maths.h"
@@ -59,10 +57,8 @@
 #include "io/beeper.h"
 #include "io/gps.h"
 #include "io/motors.h"
-#include "io/servos.h"
 #include "io/serial.h"
 #include "io/statusindicator.h"
-#include "io/transponder_ir.h"
 #include "io/asyncfatfs/asyncfatfs.h"
 
 #include "rx/rx.h"
@@ -165,12 +161,6 @@ void mwDisarm(void)
 
     if (ARMING_FLAG(ARMED)) {
         DISABLE_ARMING_FLAG(ARMED);
-
-#ifdef BLACKBOX
-        if (feature(FEATURE_BLACKBOX)) {
-            finishBlackbox();
-        }
-#endif
 
         beeper(BEEPER_DISARMING);      // emit disarm tone
     }
@@ -535,17 +525,8 @@ static void subTaskMainSubprocesses(timeUs_t currentTimeUs)
     afatfs_poll();
 #endif
 
-#ifdef BLACKBOX
-    if (!cliMode && feature(FEATURE_BLACKBOX)) {
-        handleBlackbox(currentTimeUs);
-    }
-#else
     UNUSED(currentTimeUs);
-#endif
 
-#ifdef TRANSPONDER
-    transponderUpdate(currentTimeUs);
-#endif
     DEBUG_SET(DEBUG_PIDLOOP, 2, micros() - startTime);
 }
 
