@@ -187,7 +187,6 @@ FATFS_SRC       = $(notdir $(wildcard $(FATFS_DIR)/*.c))
 
 CSOURCES        := $(shell find $(SRC_DIR) -name '*.c')
 
-ifeq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
 # F3 TARGETS
 
 STDPERIPH_DIR   = $(ROOT)/lib/main/STM32F30x_StdPeriph_Driver
@@ -224,290 +223,7 @@ LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f303_$(FLASH_SIZE)k.ld
 ARCH_FLAGS      = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
 DEVICE_FLAGS    = -DSTM32F303xC -DSTM32F303
 # End F3 targets
-#
-# Start F4 targets
-else ifeq ($(TARGET),$(filter $(TARGET), $(F4_TARGETS)))
 
-#STDPERIPH
-STDPERIPH_DIR   = $(ROOT)/lib/main/STM32F4xx_StdPeriph_Driver
-STDPERIPH_SRC   = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
-EXCLUDES        = stm32f4xx_crc.c \
-                  stm32f4xx_can.c \
-                  stm32f4xx_fmc.c \
-                  stm32f4xx_sai.c \
-                  stm32f4xx_cec.c \
-                  stm32f4xx_dsi.c \
-                  stm32f4xx_flash_ramfunc.c \
-                  stm32f4xx_fmpi2c.c \
-                  stm32f4xx_lptim.c \
-                  stm32f4xx_qspi.c \
-                  stm32f4xx_spdifrx.c \
-                  stm32f4xx_cryp.c \
-                  stm32f4xx_cryp_aes.c \
-                  stm32f4xx_hash_md5.c \
-                  stm32f4xx_cryp_des.c \
-                  stm32f4xx_rtc.c \
-                  stm32f4xx_hash.c \
-                  stm32f4xx_dbgmcu.c \
-                  stm32f4xx_cryp_tdes.c \
-                  stm32f4xx_hash_sha1.c
-
-ifeq ($(TARGET),$(filter $(TARGET), $(F411_TARGETS)))
-EXCLUDES        += stm32f4xx_fsmc.c
-endif
-
-ifeq ($(TARGET),$(filter $(TARGET), $(F446_TARGETS)))
-EXCLUDES        += stm32f4xx_fsmc.c
-endif
-
-STDPERIPH_SRC   := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
-
-#USB
-USBCORE_DIR = $(ROOT)/lib/main/STM32_USB_Device_Library/Core
-USBCORE_SRC = $(notdir $(wildcard $(USBCORE_DIR)/src/*.c))
-USBOTG_DIR  = $(ROOT)/lib/main/STM32_USB_OTG_Driver
-USBOTG_SRC  = $(notdir $(wildcard $(USBOTG_DIR)/src/*.c))
-EXCLUDES    = usb_bsp_template.c \
-              usb_conf_template.c \
-              usb_hcd_int.c \
-              usb_hcd.c \
-              usb_otg.c
-
-USBOTG_SRC  := $(filter-out ${EXCLUDES}, $(USBOTG_SRC))
-USBCDC_DIR  = $(ROOT)/lib/main/STM32_USB_Device_Library/Class/cdc
-USBCDC_SRC  = $(notdir $(wildcard $(USBCDC_DIR)/src/*.c))
-EXCLUDES    = usbd_cdc_if_template.c
-USBCDC_SRC  := $(filter-out ${EXCLUDES}, $(USBCDC_SRC))
-VPATH       := $(VPATH):$(USBOTG_DIR)/src:$(USBCORE_DIR)/src:$(USBCDC_DIR)/src
-
-DEVICE_STDPERIPH_SRC := $(STDPERIPH_SRC) \
-                        $(USBOTG_SRC) \
-                        $(USBCORE_SRC) \
-                        $(USBCDC_SRC)
-
-#CMSIS
-VPATH           := $(VPATH):$(CMSIS_DIR)/CM4/CoreSupport:$(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx
-CMSIS_SRC       = $(notdir $(wildcard $(CMSIS_DIR)/CM4/CoreSupport/*.c \
-                  $(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx/*.c))
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(STDPERIPH_DIR)/inc \
-                   $(USBOTG_DIR)/inc \
-                   $(USBCORE_DIR)/inc \
-                   $(USBCDC_DIR)/inc \
-                   $(USBFS_DIR)/inc \
-                   $(CMSIS_DIR)/CM4/CoreSupport \
-                   $(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx \
-                   $(ROOT)/src/main/vcpf4
-
-ifneq ($(filter SDCARD,$(FEATURES)),)
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(FATFS_DIR)
-VPATH           := $(VPATH):$(FATFS_DIR)
-endif
-
-#Flags
-ARCH_FLAGS      = -mthumb -mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
-
-ifeq ($(TARGET),$(filter $(TARGET),$(F411_TARGETS)))
-DEVICE_FLAGS    = -DSTM32F411xE
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f411.ld
-STARTUP_SRC     = startup_stm32f411xe.s
-else ifeq ($(TARGET),$(filter $(TARGET),$(F405_TARGETS)))
-DEVICE_FLAGS    = -DSTM32F40_41xxx
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f405.ld
-STARTUP_SRC     = startup_stm32f40xx.s
-else ifeq ($(TARGET),$(filter $(TARGET),$(F446_TARGETS)))
-DEVICE_FLAGS    = -DSTM32F446xx
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f446.ld
-STARTUP_SRC     = startup_stm32f446xx.s
-else
-$(error Unknown MCU for F4 target)
-endif
-DEVICE_FLAGS    += -DHSE_VALUE=$(HSE_VALUE)
-
-# End F4 targets
-#
-# Start F7 targets
-else ifeq ($(TARGET),$(filter $(TARGET), $(F7_TARGETS)))
-
-#STDPERIPH
-STDPERIPH_DIR   = $(ROOT)/lib/main/STM32F7xx_HAL_Driver
-STDPERIPH_SRC   = $(notdir $(wildcard $(STDPERIPH_DIR)/Src/*.c))
-EXCLUDES        = stm32f7xx_hal_can.c \
-                  stm32f7xx_hal_cec.c \
-                  stm32f7xx_hal_crc.c \
-                  stm32f7xx_hal_crc_ex.c \
-                  stm32f7xx_hal_cryp.c \
-                  stm32f7xx_hal_cryp_ex.c \
-                  stm32f7xx_hal_dac.c \
-                  stm32f7xx_hal_dac_ex.c \
-                  stm32f7xx_hal_dcmi.c \
-                  stm32f7xx_hal_dcmi_ex.c \
-                  stm32f7xx_hal_dfsdm.c \
-                  stm32f7xx_hal_dma2d.c \
-                  stm32f7xx_hal_dsi.c \
-                  stm32f7xx_hal_eth.c \
-                  stm32f7xx_hal_hash.c \
-                  stm32f7xx_hal_hash_ex.c \
-                  stm32f7xx_hal_hcd.c \
-                  stm32f7xx_hal_i2s.c \
-                  stm32f7xx_hal_irda.c \
-                  stm32f7xx_hal_iwdg.c \
-                  stm32f7xx_hal_jpeg.c \
-                  stm32f7xx_hal_lptim.c \
-                  stm32f7xx_hal_ltdc.c \
-                  stm32f7xx_hal_ltdc_ex.c \
-                  stm32f7xx_hal_mdios.c \
-                  stm32f7xx_hal_mmc.c \
-                  stm32f7xx_hal_msp_template.c \
-                  stm32f7xx_hal_nand.c \
-                  stm32f7xx_hal_nor.c \
-                  stm32f7xx_hal_qspi.c \
-                  stm32f7xx_hal_rng.c \
-                  stm32f7xx_hal_rtc.c \
-                  stm32f7xx_hal_rtc_ex.c \
-                  stm32f7xx_hal_sai.c \
-                  stm32f7xx_hal_sai_ex.c \
-                  stm32f7xx_hal_sd.c \
-                  stm32f7xx_hal_sdram.c \
-                  stm32f7xx_hal_smartcard.c \
-                  stm32f7xx_hal_smartcard_ex.c \
-                  stm32f7xx_hal_smbus.c \
-                  stm32f7xx_hal_spdifrx.c \
-                  stm32f7xx_hal_sram.c \
-                  stm32f7xx_hal_timebase_rtc_alarm_template.c \
-                  stm32f7xx_hal_timebase_rtc_wakeup_template.c \
-                  stm32f7xx_hal_timebase_tim_template.c \
-                  stm32f7xx_hal_wwdg.c \
-                  stm32f7xx_ll_adc.c \
-                  stm32f7xx_ll_crc.c \
-                  stm32f7xx_ll_dac.c \
-                  stm32f7xx_ll_dma.c \
-                  stm32f7xx_ll_dma2d.c \
-                  stm32f7xx_ll_exti.c \
-                  stm32f7xx_ll_fmc.c \
-                  stm32f7xx_ll_gpio.c \
-                  stm32f7xx_ll_i2c.c \
-                  stm32f7xx_ll_lptim.c \
-                  stm32f7xx_ll_pwr.c \
-                  stm32f7xx_ll_rcc.c \
-                  stm32f7xx_ll_rng.c \
-                  stm32f7xx_ll_rtc.c \
-                  stm32f7xx_ll_sdmmc.c \
-                  stm32f7xx_ll_spi.c \
-                  stm32f7xx_ll_tim.c \
-                  stm32f7xx_ll_usart.c \
-                  stm32f7xx_ll_utils.c
-
-STDPERIPH_SRC   := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
-
-#USB
-USBCORE_DIR = $(ROOT)/lib/main/Middlewares/ST/STM32_USB_Device_Library/Core
-USBCORE_SRC = $(notdir $(wildcard $(USBCORE_DIR)/Src/*.c))
-EXCLUDES    = usbd_conf_template.c
-USBCORE_SRC := $(filter-out ${EXCLUDES}, $(USBCORE_SRC))
-
-USBCDC_DIR = $(ROOT)/lib/main/Middlewares/ST/STM32_USB_Device_Library/Class/CDC
-USBCDC_SRC = $(notdir $(wildcard $(USBCDC_DIR)/Src/*.c))
-EXCLUDES   = usbd_cdc_if_template.c
-USBCDC_SRC := $(filter-out ${EXCLUDES}, $(USBCDC_SRC))
-
-VPATH := $(VPATH):$(USBCDC_DIR)/Src:$(USBCORE_DIR)/Src
-
-DEVICE_STDPERIPH_SRC := $(STDPERIPH_SRC) \
-                        $(USBCORE_SRC) \
-                        $(USBCDC_SRC)
-
-#CMSIS
-VPATH           := $(VPATH):$(CMSIS_DIR)/CM7/Include:$(CMSIS_DIR)/CM7/Device/ST/STM32F7xx
-VPATH           := $(VPATH):$(STDPERIPH_DIR)/Src
-CMSIS_SRC       = $(notdir $(wildcard $(CMSIS_DIR)/CM7/Include/*.c \
-                  $(CMSIS_DIR)/CM7/Device/ST/STM32F7xx/*.c))
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(STDPERIPH_DIR)/Inc \
-                   $(USBCORE_DIR)/Inc \
-                   $(USBCDC_DIR)/Inc \
-                   $(CMSIS_DIR)/CM7/Include \
-                   $(CMSIS_DIR)/CM7/Device/ST/STM32F7xx/Include \
-                   $(ROOT)/src/main/vcp_hal
-
-ifneq ($(filter SDCARD,$(FEATURES)),)
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(FATFS_DIR)
-VPATH           := $(VPATH):$(FATFS_DIR)
-endif
-
-#Flags
-ARCH_FLAGS      = -mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -fsingle-precision-constant -Wdouble-promotion
-
-ifeq ($(TARGET),$(filter $(TARGET),$(F7X5XG_TARGETS)))
-DEVICE_FLAGS    = -DSTM32F745xx -DUSE_HAL_DRIVER -D__FPU_PRESENT
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f745.ld
-STARTUP_SRC     = startup_stm32f745xx.s
-else ifeq ($(TARGET),$(filter $(TARGET),$(F7X6XG_TARGETS)))
-DEVICE_FLAGS    = -DSTM32F746xx -DUSE_HAL_DRIVER -D__FPU_PRESENT
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f746.ld
-STARTUP_SRC     = startup_stm32f746xx.s
-else ifeq ($(TARGET),$(filter $(TARGET),$(F7X2RE_TARGETS)))
-DEVICE_FLAGS    = -DSTM32F722xx -DUSE_HAL_DRIVER -D__FPU_PRESENT
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f722.ld
-STARTUP_SRC     = startup_stm32f722xx.s
-else
-$(error Unknown MCU for F7 target)
-endif
-DEVICE_FLAGS    += -DHSE_VALUE=$(HSE_VALUE)
-
-TARGET_FLAGS    = -D$(TARGET)
-
-# End F7 targets
-#
-# Start F1 targets
-else
-
-STDPERIPH_DIR   = $(ROOT)/lib/main/STM32F10x_StdPeriph_Driver
-STDPERIPH_SRC   = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
-EXCLUDES        = stm32f10x_crc.c \
-                  stm32f10x_cec.c \
-                  stm32f10x_can.c
-STARTUP_SRC     = startup_stm32f10x_md_gcc.S
-STDPERIPH_SRC   := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
-
-# Search path and source files for the CMSIS sources
-VPATH           := $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
-CMSIS_SRC       = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
-                  $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
-
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(STDPERIPH_DIR)/inc \
-                   $(CMSIS_DIR)/CM3/CoreSupport \
-                   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
-
-DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
-
-ifneq ($(filter VCP, $(FEATURES)),)
-INCLUDE_DIRS    := $(INCLUDE_DIRS) \
-                   $(USBFS_DIR)/inc \
-                   $(ROOT)/src/main/vcp
-
-VPATH           := $(VPATH):$(USBFS_DIR)/src
-
-DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC) \
-                        $(USBPERIPH_SRC)
-
-endif
-
-LD_SCRIPT       = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
-ARCH_FLAGS      = -mthumb -mcpu=cortex-m3
-
-ifeq ($(DEVICE_FLAGS),)
-DEVICE_FLAGS    = -DSTM32F10X_MD
-endif
-DEVICE_FLAGS   += -DSTM32F10X
-
-endif
-#
-# End F1 targets
-#
 ifneq ($(BASE_TARGET), $(TARGET))
 TARGET_FLAGS  := $(TARGET_FLAGS) -D$(BASE_TARGET)
 endif
@@ -632,21 +348,10 @@ COMMON_SRC = \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC)
 
-            # telemetry/telemetry.c \
-            # telemetry/crsf.c \
-            # telemetry/srxl.c \
-            # telemetry/frsky.c \
-            # telemetry/hott.c \
-            # telemetry/smartport.c \
-            # telemetry/ltm.c \
-            # telemetry/mavlink.c \
-            # telemetry/ibus.c \
-
 
 SPEED_OPTIMISED_SRC := ""
 SIZE_OPTIMISED_SRC  := ""
 
-ifeq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
 SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
             common/encoding.c \
             common/filter.c \
@@ -726,25 +431,7 @@ SIZE_OPTIMISED_SRC := $(SIZE_OPTIMISED_SRC) \
             cms/cms_menu_vtx.c \
             io/vtx_smartaudio.c \
             io/vtx_tramp.c
-endif #F3
 
-ifeq ($(TARGET),$(filter $(TARGET),$(F4_TARGETS)))
-VCP_SRC = \
-            vcpf4/stm32f4xx_it.c \
-            vcpf4/usb_bsp.c \
-            vcpf4/usbd_desc.c \
-            vcpf4/usbd_usr.c \
-            vcpf4/usbd_cdc_vcp.c \
-            drivers/serial_usb_vcp.c \
-            drivers/usb_io.c
-else ifeq ($(TARGET),$(filter $(TARGET),$(F7_TARGETS)))
-VCP_SRC = \
-            vcp_hal/usbd_desc.c \
-            vcp_hal/usbd_conf.c \
-            vcp_hal/usbd_cdc_interface.c \
-            drivers/serial_usb_vcp.c \
-            drivers/usb_io.c
-else
 VCP_SRC = \
             vcp/hw_config.c \
             vcp/stm32_it.c \
@@ -755,17 +442,7 @@ VCP_SRC = \
             vcp/usb_pwr.c \
             drivers/serial_usb_vcp.c \
             drivers/usb_io.c
-endif
 
-STM32F10x_COMMON_SRC = \
-            drivers/adc_stm32f10x.c \
-            drivers/bus_i2c_stm32f10x.c \
-            drivers/dma.c \
-            drivers/gpio_stm32f10x.c \
-            drivers/inverter.c \
-            drivers/serial_uart_stm32f10x.c \
-            drivers/system_stm32f10x.c \
-            drivers/timer_stm32f10x.c
 
 STM32F30x_COMMON_SRC = \
             target/system_stm32f30x.c \
@@ -778,50 +455,8 @@ STM32F30x_COMMON_SRC = \
             drivers/system_stm32f30x.c \
             drivers/timer_stm32f30x.c
 
-STM32F4xx_COMMON_SRC = \
-            target/system_stm32f4xx.c \
-            drivers/accgyro_mpu.c \
-            drivers/adc_stm32f4xx.c \
-            drivers/bus_i2c_stm32f10x.c \
-            drivers/dma_stm32f4xx.c \
-            drivers/gpio_stm32f4xx.c \
-            drivers/inverter.c \
-            drivers/pwm_output_dshot.c \
-            drivers/serial_uart_stm32f4xx.c \
-            drivers/system_stm32f4xx.c \
-            drivers/timer_stm32f4xx.c
-
-STM32F7xx_COMMON_SRC = \
-            target/system_stm32f7xx.c \
-            drivers/accgyro_mpu.c \
-            drivers/adc_stm32f7xx.c \
-            drivers/bus_i2c_hal.c \
-            drivers/dma_stm32f7xx.c \
-            drivers/gpio_stm32f7xx.c \
-            drivers/inverter.c \
-            drivers/bus_spi_hal.c \
-            drivers/pwm_output_stm32f7xx.c \
-            drivers/timer_hal.c \
-            drivers/timer_stm32f7xx.c \
-            drivers/system_stm32f7xx.c \
-            drivers/serial_uart_stm32f7xx.c \
-            drivers/serial_uart_hal.c
-
-F7EXCLUDES = drivers/bus_spi.c \
-            drivers/bus_i2c.c \
-            drivers/timer.c \
-            drivers/serial_uart.c
-
 # check if target.mk supplied
-ifeq ($(TARGET),$(filter $(TARGET),$(F4_TARGETS)))
-TARGET_SRC := $(STARTUP_SRC) $(STM32F4xx_COMMON_SRC) $(TARGET_SRC)
-else ifeq ($(TARGET),$(filter $(TARGET),$(F7_TARGETS)))
-TARGET_SRC := $(STARTUP_SRC) $(STM32F7xx_COMMON_SRC) $(TARGET_SRC)
-else ifeq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
 TARGET_SRC := $(STARTUP_SRC) $(STM32F30x_COMMON_SRC) $(TARGET_SRC)
-else ifeq ($(TARGET),$(filter $(TARGET),$(F1_TARGETS)))
-TARGET_SRC := $(STARTUP_SRC) $(STM32F10x_COMMON_SRC) $(TARGET_SRC)
-endif
 
 ifneq ($(filter $(TARGET),$(F4_TARGETS) $(F7_TARGETS)),)
 DSPLIB := $(ROOT)/lib/main/DSP_Lib
@@ -878,24 +513,12 @@ OPTIMISATION_BASE   := -flto -fuse-linker-plugin -ffast-math
 OPTIMISE_SPEED      := ""
 OPTIMISE_SIZE       := ""
 
-ifeq ($(TARGET),$(filter $(TARGET),$(F1_TARGETS)))
-OPTIMISE_DEFAULT    := -Os
-
-LTO_FLAGS           := $(OPTIMISATION_BASE) $(OPTIMISE_DEFAULT)
-
-else ifeq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
 OPTIMISE_DEFAULT    := -O2
 OPTIMISE_SPEED      := -Ofast
 OPTIMISE_SIZE       := -Os
 
 LTO_FLAGS           := $(OPTIMISATION_BASE) $(OPTIMISE_SPEED)
 
-else
-OPTIMISE_DEFAULT    := -Ofast
-
-LTO_FLAGS           := $(OPTIMISATION_BASE) $(OPTIMISE_DEFAULT)
-
-endif #TARGETS
 
 CC_DEFAULT_OPTIMISATION := $(OPTIMISATION_BASE) $(OPTIMISE_DEFAULT)
 CC_SPEED_OPTIMISATION   := $(OPTIMISATION_BASE) $(OPTIMISE_SPEED)
