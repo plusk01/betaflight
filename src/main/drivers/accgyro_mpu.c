@@ -38,13 +38,8 @@
 
 #include "sensor.h"
 #include "accgyro.h"
-#include "accgyro_mpu3050.h"
-#include "accgyro_mpu6050.h"
 #include "accgyro_mpu6500.h"
-#include "accgyro_spi_mpu6000.h"
 #include "accgyro_spi_mpu6500.h"
-#include "accgyro_spi_icm20689.h"
-#include "accgyro_spi_mpu9250.h"
 #include "accgyro_mpu.h"
 
 
@@ -306,11 +301,11 @@ mpuDetectionResult_t *mpuDetect(gyroDev_t *gyro)
     uint8_t inquiryResult;
     ack = mpuReadRegisterI2C(MPU_RA_WHO_AM_I_LEGACY, 1, &inquiryResult);
     inquiryResult &= MPU_INQUIRY_MASK;
-    if (ack && inquiryResult == MPUx0x0_WHO_AM_I_CONST) {
-        gyro->mpuDetectionResult.sensor = MPU_3050;
-        gyro->mpuConfiguration.gyroReadXRegister = MPU3050_GYRO_OUT;
-        return &gyro->mpuDetectionResult;
-    }
+    // if (ack && inquiryResult == MPUx0x0_WHO_AM_I_CONST) {
+        // gyro->mpuDetectionResult.sensor = MPU_3050;
+        // gyro->mpuConfiguration.gyroReadXRegister = MPU3050_GYRO_OUT;
+        // return &gyro->mpuDetectionResult;
+    // }
 
     sig &= MPU_INQUIRY_MASK;
 
