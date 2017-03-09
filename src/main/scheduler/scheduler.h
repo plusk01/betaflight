@@ -57,41 +57,8 @@ typedef enum {
     TASK_SERIAL,
     TASK_DISPATCH,
     TASK_BATTERY,
-#ifdef BEEPER
-    TASK_BEEPER,
-#endif
-#ifdef GPS
-    TASK_GPS,
-#endif
-#ifdef MAG
-    TASK_COMPASS,
-#endif
-#ifdef BARO
-    TASK_BARO,
-#endif
-#ifdef SONAR
-    TASK_SONAR,
-#endif
-#if defined(BARO) || defined(SONAR)
-    TASK_ALTITUDE,
-#endif
-#ifdef USE_DASHBOARD
-    TASK_DASHBOARD,
-#endif
-#ifdef TELEMETRY
-    TASK_TELEMETRY,
-#endif
-#ifdef LED_STRIP
-    TASK_LEDSTRIP,
-#endif
-#ifdef TRANSPONDER
-    TASK_TRANSPONDER,
-#endif
 #ifdef STACK_CHECK
     TASK_STACK_CHECK,
-#endif
-#ifdef OSD
-    TASK_OSD,
 #endif
 #ifdef USE_BST
     TASK_BST_MASTER_PROCESS,
@@ -101,9 +68,6 @@ typedef enum {
 #endif
 #ifdef CMS
     TASK_CMS,
-#endif
-#ifdef VTX_CONTROL
-    TASK_VTXCTRL,
 #endif
 #ifdef USE_GYRO_DATA_ANALYSE
     TASK_GYRO_DATA_ANALYSE,

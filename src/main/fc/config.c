@@ -38,7 +38,6 @@
 #include "config/parameter_group_ids.h"
 
 #include "drivers/accgyro.h"
-#include "drivers/compass.h"
 #include "drivers/io.h"
 #include "drivers/pwm_esc_detect.h"
 #include "drivers/pwm_output.h"
@@ -59,7 +58,6 @@
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/motors.h"
 #include "io/serial.h"
@@ -68,10 +66,8 @@
 #include "rx/rx_spi.h"
 
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
-#include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
 
@@ -123,16 +119,6 @@ static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
-static void resetCompassConfig(compassConfig_t* compassConfig)
-{
-    compassConfig->mag_align = ALIGN_DEFAULT;
-#ifdef MAG_INT_EXTI
-    compassConfig->interruptTag = IO_TAG(MAG_INT_EXTI);
-#else
-    compassConfig->interruptTag = IO_TAG_NONE;
-#endif
-}
-
 static void resetControlRateProfile(controlRateConfig_t *controlRateConfig)
 {
     controlRateConfig->rcRate8 = 100;
@@ -209,37 +195,9 @@ void resetProfile(profile_t *profile)
     resetPidProfile(&profile->pidProfile);
 }
 
-#ifdef BARO
-void resetBarometerConfig(barometerConfig_t *barometerConfig)
-{
-    barometerConfig->baro_sample_count = 21;
-    barometerConfig->baro_noise_lpf = 0.6f;
-    barometerConfig->baro_cf_vel = 0.985f;
-    barometerConfig->baro_cf_alt = 0.965f;
-}
-#endif
-
-
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
-#ifdef USE_SERVOS
-void resetServoConfig(servoConfig_t *servoConfig)
-{
-    servoConfig->dev.servoCenterPulse = 1500;
-    servoConfig->dev.servoPwmRate = 50;
-    servoConfig->tri_unarmed_servo = 1;
-    servoConfig->servo_lowpass_freq = 0;
-
-    int servoIndex = 0;
-    for (int i = 0; i < USABLE_TIMER_CHANNEL_COUNT && servoIndex < MAX_SUPPORTED_SERVOS; i++) {
-        if (timerHardware[i].usageFlags & TIM_USE_SERVO) {
-            servoConfig->dev.ioTags[servoIndex] = timerHardware[i].tag;
-            servoIndex++;
-        }
-    }
-}
-#endif
 
 void resetMotorConfig(motorConfig_t *motorConfig)
 {
@@ -736,10 +694,6 @@ void createDefaultConfig(master_t *config)
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
-    resetCompassConfig(&config->compassConfig);
-#endif
-
-#ifndef USE_PARAMETER_GROUPS
     resetAccelerometerTrims(&config->accelerometerConfig.accZero);
     config->accelerometerConfig.acc_align = ALIGN_DEFAULT;
     config->accelerometerConfig.acc_hardware = ACC_DEFAULT;     // default/autodetect
@@ -753,11 +707,6 @@ void createDefaultConfig(master_t *config)
 #endif
     config->rcControlsConfig.yaw_control_direction = 1;
 
-    // xxx_hardware: 0:default/autodetect, 1: disable
-    config->compassConfig.mag_hardware = 1;
-
-    config->barometerConfig.baro_hardware = 1;
-
 #ifndef USE_PARAMETER_GROUPS
     resetBatteryConfig(&config->batteryConfig);
 
@@ -769,9 +718,6 @@ void createDefaultConfig(master_t *config)
     config->pwmConfig.inputFilteringMode = INPUT_FILTERING_DISABLED;
 #endif
 
-#ifdef TELEMETRY
-    resetTelemetryConfig(&config->telemetryConfig);
-#endif
 #endif
 
 #ifndef USE_PARAMETER_GROUPS
@@ -841,8 +787,6 @@ void createDefaultConfig(master_t *config)
         resetControlRateProfile(&config->controlRateProfile[ii]);
     }
 #endif
-
-    config->compassConfig.mag_declination = 0;
 
     // Radio
 #ifdef RX_CHANNELS_TAER

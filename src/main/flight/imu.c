@@ -41,8 +41,6 @@
 #include "flight/pid.h"
 
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
-#include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
 
@@ -361,11 +359,6 @@ static bool imuIsAccelerometerHealthy(void)
     return (81 < accMagnitude) && (accMagnitude < 121);
 }
 
-static bool isMagnetometerHealthy(void)
-{
-    return (mag.magADC[X] != 0) && (mag.magADC[Y] != 0) && (mag.magADC[Z] != 0);
-}
-
 static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 {
     static uint32_t previousIMUUpdateTime;
@@ -381,14 +374,10 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
         useAcc = true;
     }
 
-    if (sensors(SENSOR_MAG) && isMagnetometerHealthy()) {
-        useMag = true;
-    }
-
     imuMahonyAHRSupdate(deltaT * 1e-6f,
                         DEGREES_TO_RADIANS(gyro.gyroADCf[X]), DEGREES_TO_RADIANS(gyro.gyroADCf[Y]), DEGREES_TO_RADIANS(gyro.gyroADCf[Z]),
                         useAcc, acc.accSmooth[X], acc.accSmooth[Y], acc.accSmooth[Z],
-                        useMag, mag.magADC[X], mag.magADC[Y], mag.magADC[Z],
+                        useMag, 0, 0, 0,
                         useYaw, rawYawError);
 
     imuUpdateEulerAngles();

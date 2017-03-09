@@ -54,7 +54,6 @@ extern uint8_t __config_end;
 #include "drivers/accgyro.h"
 #include "drivers/buf_writer.h"
 #include "drivers/bus_i2c.h"
-#include "drivers/compass.h"
 #include "drivers/dma.h"
 #include "drivers/io.h"
 #include "drivers/io_impl.h"
@@ -77,7 +76,6 @@ extern uint8_t __config_end;
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/serial.h"
 
@@ -87,10 +85,8 @@ extern uint8_t __config_end;
 #include "scheduler/scheduler.h"
 
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
-#include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
 
@@ -148,28 +144,6 @@ static const char * const lookupTableAccHardware[] = {
     "ICM20689",
     "FAKE"
 };
-
-#ifdef BARO
-// sync this with baroSensor_e
-static const char * const lookupTableBaroHardware[] = {
-    "AUTO",
-    "NONE",
-    "BMP085",
-    "MS5611",
-    "BMP280"
-};
-#endif
-
-#ifdef MAG
-// sync this with magSensor_e
-static const char * const lookupTableMagHardware[] = {
-    "AUTO",
-    "NONE",
-    "HMC5883",
-    "AK8975",
-    "AK8963"
-};
-#endif
 
 #if defined(USE_SENSOR_NAMES)
 // sync this with sensors_e
@@ -695,7 +669,6 @@ static const clivalue_t valueTable[] = {
     { "cbat_alert_percent",         VAR_UINT8  | MASTER_VALUE, &batteryConfig()->consumptionWarningPercentage, .config.minmax = { 0, 100 } },
     { "align_gyro",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &gyroConfig()->gyro_align, .config.lookup = { TABLE_ALIGNMENT } },
     { "align_acc",                  VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &accelerometerConfig()->acc_align, .config.lookup = { TABLE_ALIGNMENT } },
-    { "align_mag",                  VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &compassConfig()->mag_align, .config.lookup = { TABLE_ALIGNMENT } },
 
     { "align_board_roll",           VAR_INT16  | MASTER_VALUE,  &boardAlignment()->rollDegrees, .config.minmax = { -180,  360 } },
     { "align_board_pitch",          VAR_INT16  | MASTER_VALUE,  &boardAlignment()->pitchDegrees, .config.minmax = { -180,  360 } },
@@ -805,11 +778,6 @@ static const clivalue_t valueTable[] = {
     { "level_sensitivity",          VAR_UINT8  | PROFILE_VALUE, &pidProfiles(0)->levelSensitivity, .config.minmax = { 10,  200 } },
     { "level_limit",                VAR_UINT8  | PROFILE_VALUE, &pidProfiles(0)->levelAngleLimit, .config.minmax = { 10,  120 } },
 
-#ifdef MAG
-    { "magzero_x",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[X], .config.minmax = { INT16_MIN,  INT16_MAX } },
-    { "magzero_y",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[Y], .config.minmax = { INT16_MIN,  INT16_MAX } },
-    { "magzero_z",                  VAR_INT16  | MASTER_VALUE, &compassConfig()->magZero.raw[Z], .config.minmax = { INT16_MIN,  INT16_MAX } },
-#endif
 };
 #endif
 
@@ -817,15 +785,6 @@ static const clivalue_t valueTable[] = {
 static featureConfig_t featureConfigCopy;
 static gyroConfig_t gyroConfigCopy;
 static accelerometerConfig_t accelerometerConfigCopy;
-#ifdef MAG
-static compassConfig_t compassConfigCopy;
-#endif
-#ifdef BARO
-static barometerConfig_t barometerConfigCopy;
-#endif
-#ifdef PITOT
-static pitotmeterConfig_t pitotmeterConfigCopy;
-#endif
 static featureConfig_t featureConfigCopy;
 static rxConfig_t rxConfigCopy;
 static rxFailsafeChannelConfig_t rxFailsafeChannelConfigsCopy[MAX_SUPPORTED_RC_CHANNEL_COUNT];
@@ -833,11 +792,6 @@ static rxChannelRangeConfig_t rxChannelRangeConfigsCopy[NON_AUX_CHANNEL_COUNT];
 static motorConfig_t motorConfigCopy;
 static failsafeConfig_t failsafeConfigCopy;
 static boardAlignment_t boardAlignmentCopy;
-#ifdef USE_SERVOS
-static servoConfig_t servoConfigCopy;
-static servoMixer_t customServoMixersCopy[MAX_SERVO_RULES];
-static servoParam_t servoParamsCopy[MAX_SUPPORTED_SERVOS];
-#endif
 static batteryConfig_t batteryConfigCopy;
 static motorMixer_t customMotorMixerCopy[MAX_SUPPORTED_MOTORS];
 static mixerConfig_t mixerConfigCopy;
@@ -1032,24 +986,6 @@ static const cliCurrentAndDefaultConfig_t *getCurrentAndDefaultConfigs(pgn_t pgn
         ret.currentConfig = &accelerometerConfigCopy;
         ret.defaultConfig = accelerometerConfig();
         break;
-#ifdef MAG
-    case PG_COMPASS_CONFIG:
-        ret.currentConfig = &compassConfigCopy;
-        ret.defaultConfig = compassConfig();
-        break;
-#endif
-#ifdef BARO
-    case PG_BAROMETER_CONFIG:
-        ret.currentConfig = &barometerConfigCopy;
-        ret.defaultConfig = barometerConfig();
-        break;
-#endif
-#ifdef PITOT
-    case PG_PITOTMETER_CONFIG:
-        ret.currentConfig = &pitotmeterConfigCopy;
-        ret.defaultConfig = pitotmeterConfig();
-        break;
-#endif
     case PG_FEATURE_CONFIG:
         ret.currentConfig = &featureConfigCopy;
         ret.defaultConfig = featureConfig();

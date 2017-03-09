@@ -32,12 +32,10 @@
 
 #include "sensors/sensors.h"
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/gyro.h"
-#include "sensors/compass.h"
 #include "sensors/initialisation.h"
 
-uint8_t detectedSensors[SENSOR_INDEX_COUNT] = { GYRO_NONE, ACC_NONE, BARO_NONE, MAG_NONE };
+uint8_t detectedSensors[SENSOR_INDEX_COUNT] = { GYRO_NONE, ACC_NONE };
 
 bool sensorsAutodetect(void)
 {
@@ -47,14 +45,6 @@ bool sensorsAutodetect(void)
     }
 
     accInit(gyro.targetLooptime);
-
-#ifdef MAG
-    compassInit();
-#endif
-
-#ifdef BARO
-    baroDetect(&baro.dev, barometerConfig()->baro_hardware);
-#endif
 
     return true;
 }

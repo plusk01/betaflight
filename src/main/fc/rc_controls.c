@@ -42,7 +42,6 @@
 
 #include "io/motors.h"
 
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
 #include "sensors/sensors.h"
 #include "sensors/gyro.h"
@@ -186,17 +185,6 @@ void processRcStickPositions(throttleStatus_e throttleStatus)
     if (rcSticks == THR_LO + YAW_LO + PIT_LO + ROL_CE) {
         // GYRO calibration
         gyroSetCalibrationCycles();
-
-#ifdef GPS
-        if (feature(FEATURE_GPS)) {
-            GPS_reset_home_position();
-        }
-#endif
-
-#ifdef BARO
-        if (sensors(SENSOR_BARO))
-            baroSetCalibrationCycles(10); // calibrate baro to new ground level (10 * 25 ms = ~250 ms non blocking)
-#endif
 
         return;
     }

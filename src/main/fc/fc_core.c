@@ -37,7 +37,6 @@
 #include "drivers/gyro_sync.h"
 
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
 #include "sensors/gyro.h"
@@ -67,7 +66,6 @@
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 
 // June 2013     V2.2-dev
@@ -110,11 +108,6 @@ void applyAndSaveAccelerometerTrimsDelta(rollAndPitchTrims_t *rollAndPitchTrimsD
 
 bool isCalibrating()
 {
-#ifdef BARO
-    if (sensors(SENSOR_BARO) && !isBaroCalibrationComplete()) {
-        return true;
-    }
-#endif
 
     // Note: compass calibration is handled completely differently, outside of the main loop, see f.CALIBRATE_MAG
 
@@ -413,22 +406,6 @@ static void subTaskMainSubprocesses(timeUs_t currentTimeUs)
     if (feature(FEATURE_TELEMETRY)) {
         gyroReadTemperature();
     }
-
-#ifdef MAG
-    if (sensors(SENSOR_MAG)) {
-        updateMagHold();
-    }
-#endif
-
-#if defined(BARO) || defined(SONAR)
-    // updateRcCommands sets rcCommand, which is needed by updateAltHoldState and updateSonarAltHoldState
-    updateRcCommands();
-    if (sensors(SENSOR_BARO) || sensors(SENSOR_SONAR)) {
-        if (FLIGHT_MODE(BARO_MODE) || FLIGHT_MODE(SONAR_MODE)) {
-            applyAltHold();
-        }
-    }
-#endif
 
     // If we're armed, at minimum throttle, and we do arming via the
     // sticks, do not process yaw input from the rx.  We do this so the

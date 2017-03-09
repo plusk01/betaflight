@@ -40,7 +40,6 @@
 
 #include "drivers/accgyro.h"
 #include "drivers/bus_i2c.h"
-#include "drivers/compass.h"
 #include "drivers/io.h"
 #include "drivers/pwm_output.h"
 #include "drivers/serial.h"
@@ -60,7 +59,6 @@
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
 
 #include "io/motors.h"
 #include "io/serial.h"
@@ -76,10 +74,8 @@
 #include "scheduler/scheduler.h"
 
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
-#include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
 
@@ -306,32 +302,6 @@ void initActiveBoxIds(void)
         activeBoxIds[activeBoxIdCount++] = BOXHEADFREE;
     }
 
-#ifdef BARO
-    if (sensors(SENSOR_BARO)) {
-        activeBoxIds[activeBoxIdCount++] = BOXBARO;
-    }
-#endif
-
-#ifdef MAG
-    if (sensors(SENSOR_MAG)) {
-        activeBoxIds[activeBoxIdCount++] = BOXMAG;
-        activeBoxIds[activeBoxIdCount++] = BOXHEADADJ;
-    }
-#endif
-
-#ifdef GPS
-    if (feature(FEATURE_GPS)) {
-        activeBoxIds[activeBoxIdCount++] = BOXGPSHOME;
-        activeBoxIds[activeBoxIdCount++] = BOXGPSHOLD;
-    }
-#endif
-
-#ifdef SONAR
-    if (feature(FEATURE_SONAR)) {
-        activeBoxIds[activeBoxIdCount++] = BOXSONAR;
-    }
-#endif
-
     if (feature(FEATURE_FAILSAFE)) {
         activeBoxIds[activeBoxIdCount++] = BOXFAILSAFE;
     }
@@ -516,40 +486,11 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
             for (int i = 0; i < 3; i++) {
                 sbufWriteU16(dst, gyroRateDps(i));
             }
-            for (int i = 0; i < 3; i++) {
-                sbufWriteU16(dst, mag.magADC[i]);
-            }
+            // for (int i = 0; i < 3; i++) {
+            //     sbufWriteU16(dst, mag.magADC[i]);
+            // }
         }
         break;
-
-#ifdef USE_SERVOS
-    case MSP_SERVO:
-        sbufWriteData(dst, &servo, MAX_SUPPORTED_SERVOS * 2);
-        break;
-    case MSP_SERVO_CONFIGURATIONS:
-        for (int i = 0; i < MAX_SUPPORTED_SERVOS; i++) {
-            sbufWriteU16(dst, servoParams(i)->min);
-            sbufWriteU16(dst, servoParams(i)->max);
-            sbufWriteU16(dst, servoParams(i)->middle);
-            sbufWriteU8(dst, servoParams(i)->rate);
-            sbufWriteU8(dst, servoParams(i)->angleAtMin);
-            sbufWriteU8(dst, servoParams(i)->angleAtMax);
-            sbufWriteU8(dst, servoParams(i)->forwardFromChannel);
-            sbufWriteU32(dst, servoParams(i)->reversedSources);
-        }
-        break;
-    case MSP_SERVO_MIX_RULES:
-        for (int i = 0; i < MAX_SERVO_RULES; i++) {
-            sbufWriteU8(dst, customServoMixers(i)->targetChannel);
-            sbufWriteU8(dst, customServoMixers(i)->inputSource);
-            sbufWriteU8(dst, customServoMixers(i)->rate);
-            sbufWriteU8(dst, customServoMixers(i)->speed);
-            sbufWriteU8(dst, customServoMixers(i)->min);
-            sbufWriteU8(dst, customServoMixers(i)->max);
-            sbufWriteU8(dst, customServoMixers(i)->box);
-        }
-        break;
-#endif
 
     case MSP_MOTOR:
         for (unsigned i = 0; i < 8; i++) {
@@ -575,20 +516,12 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
         break;
 
     case MSP_ALTITUDE:
-#if defined(BARO) || defined(SONAR)
-        sbufWriteU32(dst, altitudeHoldGetEstimatedAltitude());
-#else
         sbufWriteU32(dst, 0);
-#endif
         sbufWriteU16(dst, vario);
         break;
 
     case MSP_SONAR_ALTITUDE:
-#if defined(SONAR)
-        sbufWriteU32(dst, sonarGetLatestAltitude());
-#else
         sbufWriteU32(dst, 0);
-#endif
         break;
 
     case MSP_ANALOG:
@@ -694,8 +627,6 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
         sbufWriteU8(dst, batteryConfig()->multiwiiCurrentMeterOutput);
         sbufWriteU8(dst, rxConfig()->rssi_channel);
         sbufWriteU8(dst, 0);
-
-        sbufWriteU16(dst, compassConfig()->mag_declination / 10);
 
         sbufWriteU8(dst, batteryConfig()->vbatscale);
         sbufWriteU8(dst, batteryConfig()->vbatmincellvoltage);
@@ -861,7 +792,6 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
     case MSP_SENSOR_ALIGNMENT:
         sbufWriteU8(dst, gyroConfig()->gyro_align);
         sbufWriteU8(dst, accelerometerConfig()->acc_align);
-        sbufWriteU8(dst, compassConfig()->mag_align);
         break;
 
     case MSP_ADVANCED_CONFIG:
@@ -913,8 +843,8 @@ static bool mspFcProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFn
 
     case MSP_SENSOR_CONFIG:
         sbufWriteU8(dst, accelerometerConfig()->acc_hardware);
-        sbufWriteU8(dst, barometerConfig()->baro_hardware);
-        sbufWriteU8(dst, compassConfig()->mag_hardware);
+        // sbufWriteU8(dst, barometerConfig()->baro_hardware);
+        sbufWriteU8(dst, 0); // replaced above
         break;
 
     case MSP_REBOOT:
@@ -1085,8 +1015,6 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
         rxConfigMutable()->rssi_channel = sbufReadU8(src);
         sbufReadU8(src);
 
-        compassConfigMutable()->mag_declination = sbufReadU16(src) * 10;
-
         batteryConfigMutable()->vbatscale = sbufReadU8(src);           // actual vbatscale as intended
         batteryConfigMutable()->vbatmincellvoltage = sbufReadU8(src);  // vbatlevel_warn1 in MWC2.3 GUI
         batteryConfigMutable()->vbatmaxcellvoltage = sbufReadU8(src);  // vbatlevel_warn2 in MWC2.3 GUI
@@ -1118,7 +1046,6 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
     case MSP_SET_SENSOR_ALIGNMENT:
         gyroConfigMutable()->gyro_align = sbufReadU8(src);
         accelerometerConfigMutable()->acc_align = sbufReadU8(src);
-        compassConfigMutable()->mag_align = sbufReadU8(src);
         break;
 
     case MSP_SET_ADVANCED_CONFIG:
@@ -1191,8 +1118,8 @@ static mspResult_e mspFcProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
 
     case MSP_SET_SENSOR_CONFIG:
         accelerometerConfigMutable()->acc_hardware = sbufReadU8(src);
-        barometerConfigMutable()->baro_hardware = sbufReadU8(src);
-        compassConfigMutable()->mag_hardware = sbufReadU8(src);
+        // barometerConfigMutable()->baro_hardware = sbufReadU8(src);
+        sbufReadU8(src); // replaced above
         break;
 
     case MSP_RESET_CONF:

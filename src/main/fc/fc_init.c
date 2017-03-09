@@ -43,7 +43,6 @@
 #include "drivers/serial_softserial.h"
 #include "drivers/serial_uart.h"
 #include "drivers/accgyro.h"
-#include "drivers/compass.h"
 #include "drivers/pwm_esc_detect.h"
 #include "drivers/rx_pwm.h"
 #include "drivers/pwm_output.h"
@@ -77,10 +76,8 @@
 #include "scheduler/scheduler.h"
 
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
-#include "sensors/compass.h"
 #include "sensors/esc_sensor.h"
 #include "sensors/gyro.h"
 #include "sensors/initialisation.h"
@@ -90,8 +87,6 @@
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
-#include "flight/servos.h"
-
 
 #ifdef USE_HARDWARE_REVISION_DETECTION
 #include "hardware_revision.h"

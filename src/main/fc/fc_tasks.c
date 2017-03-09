@@ -32,7 +32,6 @@
 
 #include "drivers/sensor.h"
 #include "drivers/accgyro.h"
-#include "drivers/compass.h"
 #include "drivers/serial.h"
 #include "drivers/stack_check.h"
 
@@ -58,9 +57,7 @@
 
 #include "sensors/sensors.h"
 #include "sensors/acceleration.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
-#include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/gyroanalyse.h"
 #include "sensors/esc_sensor.h"

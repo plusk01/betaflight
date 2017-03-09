@@ -573,9 +573,7 @@ COMMON_SRC = \
             drivers/io.c \
             drivers/light_led.c \
             drivers/resource.c \
-            drivers/rx_nrf24l01.c \
             drivers/rx_spi.c \
-            drivers/rx_xn297.c \
             drivers/pwm_esc_detect.c \
             drivers/pwm_output.c \
             drivers/rcc.c \
@@ -604,7 +602,6 @@ COMMON_SRC = \
             flight/imu.c \
             flight/mixer.c \
             flight/pid.c \
-            flight/servos.c \
             io/serial.c \
             io/serial_4way.c \
             io/serial_4way_avrootloader.c \
@@ -613,11 +610,6 @@ COMMON_SRC = \
             msp/msp_serial.c \
             rx/ibus.c \
             rx/msp.c \
-            rx/nrf24_cx10.c \
-            rx/nrf24_inav.c \
-            rx/nrf24_h8_3d.c \
-            rx/nrf24_syma.c \
-            rx/nrf24_v202.c \
             rx/pwm.c \
             rx/rx.c \
             rx/rx_spi.c \
@@ -631,13 +623,11 @@ COMMON_SRC = \
             sensors/acceleration.c \
             sensors/battery.c \
             sensors/boardalignment.c \
-            sensors/compass.c \
             sensors/gyro.c \
             sensors/gyroanalyse.c \
             sensors/initialisation.c \
             common/colorconversion.c \
             drivers/serial_escserial.c \
-            sensors/barometer.c \
             sensors/esc_sensor.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC)

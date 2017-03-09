@@ -36,7 +36,6 @@
 #include "flight/altitudehold.h"
 #include "flight/failsafe.h"
 #include "flight/mixer.h"
-#include "flight/servos.h"
 #include "flight/imu.h"
 #include "flight/pid.h"
 
@@ -48,23 +47,17 @@
 #include "sensors/gyro.h"
 #include "sensors/acceleration.h"
 #include "sensors/boardalignment.h"
-#include "sensors/barometer.h"
 #include "sensors/battery.h"
-#include "sensors/compass.h"
 
 #ifndef USE_PARAMETER_GROUPS
 #define featureConfig(x) (&masterConfig.featureConfig)
 #define systemConfig(x) (&masterConfig.systemConfig)
 #define motorConfig(x) (&masterConfig.motorConfig)
 #define flight3DConfig(x) (&masterConfig.flight3DConfig)
-#define servoConfig(x) (&masterConfig.servoConfig)
-#define servoMixerConfig(x) (&masterConfig.servoMixerConfig)
 #define boardAlignment(x) (&masterConfig.boardAlignment)
 #define imuConfig(x) (&masterConfig.imuConfig)
 #define gyroConfig(x) (&masterConfig.gyroConfig)
-#define compassConfig(x) (&masterConfig.compassConfig)
 #define accelerometerConfig(x) (&masterConfig.accelerometerConfig)
-#define barometerConfig(x) (&masterConfig.barometerConfig)
 #define throttleCorrectionConfig(x) (&masterConfig.throttleCorrectionConfig)
 #define batteryConfig(x) (&masterConfig.batteryConfig)
 #define rcControlsConfig(x) (&masterConfig.rcControlsConfig)
@@ -90,14 +83,10 @@
 #define systemConfigMutable(x) (&masterConfig.systemConfig)
 #define motorConfigMutable(x) (&masterConfig.motorConfig)
 #define flight3DConfigMutable(x) (&masterConfig.flight3DConfig)
-#define servoConfigMutable(x) (&masterConfig.servoConfig)
-#define servoMixerConfigMutable(x) (&masterConfig.servoMixerConfig)
 #define boardAlignmentMutable(x) (&masterConfig.boardAlignment)
 #define imuConfigMutable(x) (&masterConfig.imuConfig)
 #define gyroConfigMutable(x) (&masterConfig.gyroConfig)
-#define compassConfigMutable(x) (&masterConfig.compassConfig)
 #define accelerometerConfigMutable(x) (&masterConfig.accelerometerConfig)
-#define barometerConfigMutable(x) (&masterConfig.barometerConfig)
 #define throttleCorrectionConfigMutable(x) (&masterConfig.throttleCorrectionConfig)
 #define batteryConfigMutable(x) (&masterConfig.batteryConfig)
 #define rcControlsConfigMutable(x) (&masterConfig.rcControlsConfig)
@@ -148,13 +137,6 @@ typedef struct master_s {
     motorConfig_t motorConfig;
     flight3DConfig_t flight3DConfig;
 
-#ifdef USE_SERVOS
-    servoConfig_t servoConfig;
-    servoMixer_t customServoMixer[MAX_SERVO_RULES];
-    // Servo-related stuff
-    servoProfile_t servoProfile;
-#endif
-
     boardAlignment_t boardAlignment;
 
     imuConfig_t imuConfig;
@@ -162,11 +144,8 @@ typedef struct master_s {
     pidConfig_t pidConfig;
 
     gyroConfig_t gyroConfig;
-    compassConfig_t compassConfig;
 
     accelerometerConfig_t accelerometerConfig;
-
-    barometerConfig_t barometerConfig;
 
     throttleCorrectionConfig_t throttleCorrectionConfig;
 

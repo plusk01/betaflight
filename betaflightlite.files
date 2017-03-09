@@ -1569,7 +1569,6 @@ src/main/flight/mixer.h
 src/main/flight/pid.c
 src/main/flight/pid.h
 src/main/flight/servos.c
-src/main/flight/servos.h
 src/main/io/motors.h
 src/main/io/serial.c
 src/main/io/serial.h
