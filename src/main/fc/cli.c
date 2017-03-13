@@ -181,15 +181,6 @@ static const char * const lookupTableAlignment[] = {
     "CW270FLIP"
 };
 
-static const char * const lookupTableCurrentSensor[] = {
-    "NONE", "ADC", "VIRTUAL", "ESC"
-};
-
-static const char * const lookupTableBatterySensor[] = {
-    "ADC", "ESC"
-};
-
-
 #ifdef SERIAL_RX
 static const char * const lookupTableSerialRX[] = {
     "SPEK1024",

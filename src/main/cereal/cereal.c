@@ -24,7 +24,7 @@ void cerealInit(void) {
 void cerealProcess(uint32_t currentTime) {
     UNUSED(currentTime);
     if (cerealPortEnabled)
-        serialPrint(cerealPort, "Hi");
+        serialPrint(cerealPort, "Hi\n");
 }
 
 void configureCerealPort(void) {
