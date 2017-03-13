@@ -128,83 +128,18 @@ retry:
     case ACC_DEFAULT:
         ; // fallthrough
     case ACC_ADXL345: // ADXL345
-#ifdef USE_ACC_ADXL345
-        acc_params.useFifo = false;
-        acc_params.dataRate = 800; // unused currently
-        if (adxl345Detect(&acc_params, dev)) {
-#ifdef ACC_ADXL345_ALIGN
-            dev->accAlign = ACC_ADXL345_ALIGN;
-#endif
-            accHardware = ACC_ADXL345;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_LSM303DLHC:
-#ifdef USE_ACC_LSM303DLHC
-        if (lsm303dlhcAccDetect(dev)) {
-#ifdef ACC_LSM303DLHC_ALIGN
-            dev->accAlign = ACC_LSM303DLHC_ALIGN;
-#endif
-            accHardware = ACC_LSM303DLHC;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_MPU6050: // MPU6050
-#ifdef USE_ACC_MPU6050
-        if (mpu6050AccDetect(dev)) {
-#ifdef ACC_MPU6050_ALIGN
-            dev->accAlign = ACC_MPU6050_ALIGN;
-#endif
-            accHardware = ACC_MPU6050;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_MMA8452: // MMA8452
-#ifdef USE_ACC_MMA8452
-        if (mma8452Detect(dev)) {
-#ifdef ACC_MMA8452_ALIGN
-            dev->accAlign = ACC_MMA8452_ALIGN;
-#endif
-            accHardware = ACC_MMA8452;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_BMA280: // BMA280
-#ifdef USE_ACC_BMA280
-        if (bma280Detect(dev)) {
-#ifdef ACC_BMA280_ALIGN
-            dev->accAlign = ACC_BMA280_ALIGN;
-#endif
-            accHardware = ACC_BMA280;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_MPU6000:
-#ifdef USE_ACC_SPI_MPU6000
-        if (mpu6000SpiAccDetect(dev)) {
-#ifdef ACC_MPU6000_ALIGN
-            dev->accAlign = ACC_MPU6000_ALIGN;
-#endif
-            accHardware = ACC_MPU6000;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_MPU9250:
-#ifdef USE_ACC_SPI_MPU9250
-        if (mpu9250SpiAccDetect(dev)) {
-#ifdef ACC_MPU9250_ALIGN
-            dev->accAlign = ACC_MPU9250_ALIGN;
-#endif
-            accHardware = ACC_MPU9250;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_MPU6500:
     case ACC_ICM20608G:
@@ -219,52 +154,16 @@ retry:
 #ifdef ACC_MPU6500_ALIGN
             dev->accAlign = ACC_MPU6500_ALIGN;
 #endif
-            switch(dev->mpuDetectionResult.sensor) {
-            case MPU_9250_SPI:
-                accHardware = ACC_MPU9250;
-                break;
-            case ICM_20608_SPI:
-                accHardware = ACC_ICM20608G;
-                break;
-            case ICM_20602_SPI:
-                accHardware = ACC_ICM20602;
-                break;
-            default:
-                accHardware = ACC_MPU6500;
-            }
+            accHardware = ACC_MPU6500;
             break;
         }
 #endif
         ; // fallthrough
     case ACC_ICM20689:
-#ifdef USE_ACC_SPI_ICM20689
-        if (icm20689SpiAccDetect(dev)) {
-            accHardware = ACC_ICM20689;
-#ifdef ACC_ICM20689_ALIGN
-            dev->accAlign = ACC_ICM20689_ALIGN;
-#endif
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_BMI160:
-#ifdef USE_ACCGYRO_BMI160
-        if (bmi160SpiAccDetect(dev)) {
-            accHardware = ACC_BMI160;
-#ifdef ACC_BMI160_ALIGN
-            dev->accAlign = ACC_BMI160_ALIGN;
-#endif
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_FAKE:
-#ifdef USE_FAKE_ACC
-        if (fakeAccDetect(dev)) {
-            accHardware = ACC_FAKE;
-            break;
-        }
-#endif
         ; // fallthrough
     case ACC_NONE: // disable ACC
         accHardware = ACC_NONE;
@@ -310,11 +209,7 @@ bool accInit(uint32_t gyroSamplingInverval)
         break;
     case 1000:
     default:
-#ifdef STM32F10X
         acc.accSamplingInterval = 1000;
-#else
-        acc.accSamplingInterval = 1000;
-#endif
     }
     if (accLpfCutHz) {
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
