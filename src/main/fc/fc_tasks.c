@@ -64,6 +64,8 @@
 
 #include "scheduler/scheduler.h"
 
+#include "cereal/cereal.h"
+
 #ifdef USE_BST
 void taskBstMasterProcess(timeUs_t currentTimeUs);
 #endif
@@ -129,6 +131,11 @@ static void taskUpdateRxMain(timeUs_t currentTimeUs)
     updateLEDs();
 }
 
+static void taskCereal(timeUs_t currentTimeUs)
+{
+    cerealProcess(currentTimeUs);
+}
+
 void fcTasksInit(void)
 {
     schedulerInit();
@@ -147,6 +154,9 @@ void fcTasksInit(void)
     setTaskEnabled(TASK_RX, true);
 
     setTaskEnabled(TASK_DISPATCH, dispatchIsEnabled());
+
+    // custom serial printer
+    setTaskEnabled(TASK_CEREAL, true);
 
 #ifdef USE_BST
     setTaskEnabled(TASK_BST_MASTER_PROCESS, true);
@@ -219,6 +229,14 @@ cfTask_t cfTasks[TASK_COUNT] = {
         .taskFunc = taskUpdateBattery,
         .desiredPeriod = TASK_PERIOD_HZ(50),        // 50 Hz
         .staticPriority = TASK_PRIORITY_MEDIUM,
+    },
+
+    // custom serial printer task
+    [TASK_CEREAL] = {
+        .taskName = "CEREAL",
+        .taskFunc = taskCereal,
+        .desiredPeriod = TASK_PERIOD_HZ(5),
+        .staticPriority = TASK_PRIORITY_LOW,
     },
 
 #ifdef USE_BST

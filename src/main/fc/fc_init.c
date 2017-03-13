@@ -88,6 +88,8 @@
 #include "flight/mixer.h"
 #include "flight/pid.h"
 
+#include "cereal/cereal.h"
+
 #ifdef USE_HARDWARE_REVISION_DETECTION
 #include "hardware_revision.h"
 #endif
@@ -356,6 +358,9 @@ void init(void)
     failsafeInit();
 
     rxInit();
+
+    // Custom serial printer
+    cerealInit();
 
 #ifdef USE_ESC_SENSOR
     if (feature(FEATURE_ESC_SENSOR)) {

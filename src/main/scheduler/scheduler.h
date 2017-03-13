@@ -57,6 +57,9 @@ typedef enum {
     TASK_SERIAL,
     TASK_DISPATCH,
     TASK_BATTERY,
+    // custom serial printer
+    TASK_CEREAL,
+    
 #ifdef STACK_CHECK
     TASK_STACK_CHECK,
 #endif
