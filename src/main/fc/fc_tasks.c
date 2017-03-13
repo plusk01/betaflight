@@ -234,7 +234,7 @@ cfTask_t cfTasks[TASK_COUNT] = {
     [TASK_CEREAL] = {
         .taskName = "CEREAL",
         .taskFunc = taskCereal,
-        .desiredPeriod = TASK_PERIOD_HZ(5),
+        .desiredPeriod = TASK_PERIOD_HZ(10),
         .staticPriority = TASK_PRIORITY_LOW,
     },
 

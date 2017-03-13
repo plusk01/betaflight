@@ -10,12 +10,16 @@
 
 #include "io/serial.h"
 
+#include "sensors/acceleration.h"
+
 #define CEREAL_INITIAL_PORT_MODE    MODE_TX
 
 static serialPort_t *cerealPort = NULL;
 static bool cerealPortEnabled = false;
 
 static serialPortConfig_t *portConfig;
+
+extern acc_t acc;
 
 void cerealInit(void) {
     portConfig = findSerialPortConfig(FUNCTION_CEREAL);
@@ -31,6 +35,7 @@ void cerealProcess(uint32_t currentTime) {
         // serialPrint(cerealPort, "Hi\n");
         // setPrintfSerialPort(cerealPort);
         printf("Current Time: %d", currentTime);
+        printf("\t Acc.smooth[0]: %d\n", acc.accSmooth[0]);
     }
 }
 
