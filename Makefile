@@ -757,5 +757,9 @@ test junittest:
 # rebuild everything when makefile changes
 $(TARGET_OBJS) : Makefile
 
+# Print a Makefile variable
+print-%:
+	@echo '$*=$($*)'
+
 # include auto-generated dependencies
 -include $(TARGET_DEPS)
