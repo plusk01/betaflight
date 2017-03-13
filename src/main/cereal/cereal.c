@@ -6,6 +6,8 @@
 
 #include "platform.h"
 
+#include "common/printf.h"
+
 #include "io/serial.h"
 
 #define CEREAL_INITIAL_PORT_MODE    MODE_TX
@@ -19,12 +21,17 @@ void cerealInit(void) {
     portConfig = findSerialPortConfig(FUNCTION_CEREAL);
 
     configureCerealPort();
+
+    setPrintfSerialPort(cerealPort);
+    printf("printf Configured!");
 }
 
 void cerealProcess(uint32_t currentTime) {
-    UNUSED(currentTime);
-    if (cerealPortEnabled)
-        serialPrint(cerealPort, "Hi\n");
+    if (cerealPortEnabled) {
+        // serialPrint(cerealPort, "Hi\n");
+        // setPrintfSerialPort(cerealPort);
+        printf("Current Time: %d", currentTime);
+    }
 }
 
 void configureCerealPort(void) {
