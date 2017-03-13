@@ -38,7 +38,6 @@
 #include "fc/runtime_config.h"
 
 #include "sensors/battery.h"
-#include "sensors/esc_sensor.h"
 
 
 #define VBAT_LPF_FREQ  0.4f
@@ -108,17 +107,6 @@ static void updateBatteryVoltage(void)
         vBatFilterIsInitialised = true;
     }
 
-    #ifdef USE_ESC_SENSOR
-    if (feature(FEATURE_ESC_SENSOR) && batteryConfig()->batteryMeterType == BATTERY_SENSOR_ESC) {
-        escSensorData_t *escData = getEscSensorData(ESC_SENSOR_COMBINED);
-        vbatLatest = escData->dataAge <= MAX_ESC_BATTERY_AGE ? escData->voltage / 10 : 0;
-        if (debugMode == DEBUG_BATTERY) {
-            debug[0] = -1;
-        }
-        vbat = biquadFilterApply(&vBatFilter, vbatLatest);
-    }
-    else
-    #endif
     {
         uint16_t vBatSample = adcGetChannel(ADC_BATTERY);
         if (debugMode == DEBUG_BATTERY) {
@@ -298,23 +286,6 @@ void updateCurrentMeter(int32_t lastUpdateAt)
                 updateConsumptionWarning();
                 break;
             case CURRENT_SENSOR_ESC:
-#ifdef USE_ESC_SENSOR
-                if (feature(FEATURE_ESC_SENSOR)) {
-                    escSensorData_t *escData = getEscSensorData(ESC_SENSOR_COMBINED);
-                    if (escData->dataAge <= MAX_ESC_BATTERY_AGE) {
-                        amperageLatest = escData->current;
-                        mAhDrawn = escData->consumption;
-                    } else {
-                        amperageLatest = 0;
-                        mAhDrawn = 0;
-                    }
-                    amperage = amperageLatest;
-
-                    updateConsumptionWarning();
-                }
-
-                break;
-#endif
             case CURRENT_SENSOR_NONE:
                 amperage = 0;
                 amperageLatest = 0;

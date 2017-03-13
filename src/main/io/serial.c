@@ -30,9 +30,6 @@
 
 #include "drivers/system.h"
 #include "drivers/serial.h"
-#if defined(USE_SOFTSERIAL1) || defined(USE_SOFTSERIAL2)
-#include "drivers/serial_softserial.h"
-#endif
 
 #if defined(USE_UART1) || defined(USE_UART2) || defined(USE_UART3) || defined(USE_UART4) || defined(USE_UART5) || defined(USE_UART6)
 #include "drivers/serial_uart.h"

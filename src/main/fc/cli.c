@@ -60,7 +60,6 @@ extern uint8_t __config_end;
 #include "drivers/rx_pwm.h"
 #include "drivers/sensor.h"
 #include "drivers/serial.h"
-#include "drivers/serial_escserial.h"
 #include "drivers/stack_check.h"
 #include "drivers/system.h"
 #include "drivers/timer.h"
@@ -2556,60 +2555,6 @@ static void cliDshotProg(char *cmdline)
 }
 #endif
 
-#ifdef USE_ESCSERIAL
-static void cliEscPassthrough(char *cmdline)
-{
-    if (isEmpty(cmdline)) {
-        cliShowParseError();
-
-        return;
-    }
-
-    char *saveptr;
-    char *pch = strtok_r(cmdline, " ", &saveptr);
-    int pos = 0;
-    uint8_t mode = 0;
-    int escNumber = 0;
-    while (pch != NULL) {
-        switch (pos) {
-            case 0:
-                if(strncasecmp(pch, "sk", strlen(pch)) == 0) {
-                    mode = PROTOCOL_SIMONK;
-                } else if(strncasecmp(pch, "bl", strlen(pch)) == 0) {
-                    mode = PROTOCOL_BLHELI;
-                } else if(strncasecmp(pch, "ki", strlen(pch)) == 0) {
-                    mode = PROTOCOL_KISS;
-                } else if(strncasecmp(pch, "cc", strlen(pch)) == 0) {
-                    mode = PROTOCOL_KISSALL;
-                } else {
-                    cliShowParseError();
-
-                    return;
-                }
-                break;
-            case 1:
-                escNumber = parseEscNumber(pch, mode == PROTOCOL_KISS);
-                if (escNumber == -1) {
-                    return;
-                }
-
-                break;
-            default:
-                cliShowParseError();
-
-                return;
-
-                break;
-
-        }
-        pos++;
-        pch = strtok_r(NULL, " ", &saveptr);
-    }
-
-    escEnablePassthrough(cliPort, escNumber, mode);
-}
-#endif
-
 #ifndef USE_QUAD_MIXER_ONLY
 static void cliMixer(char *cmdline)
 {
@@ -3510,9 +3455,6 @@ const clicmd_t cmdTable[] = {
 #endif
     CLI_COMMAND_DEF("dump", "dump configuration",
         "[master|profile|rates|all] {showdefaults}", cliDump),
-#ifdef USE_ESCSERIAL
-    CLI_COMMAND_DEF("escprog", "passthrough esc to serial", "<mode [sk/bl/ki/cc]> <index>", cliEscPassthrough),
-#endif
     CLI_COMMAND_DEF("exit", NULL, NULL, cliExit),
     CLI_COMMAND_DEF("feature", "configure features",
         "list\r\n"

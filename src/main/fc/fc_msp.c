@@ -43,7 +43,6 @@
 #include "drivers/io.h"
 #include "drivers/pwm_output.h"
 #include "drivers/serial.h"
-#include "drivers/serial_escserial.h"
 #include "drivers/system.h"
 
 #include "fc/config.h"
@@ -199,22 +198,6 @@ static void mspFc4waySerialCommand(sbuf_t *dst, sbuf_t *src, mspPostProcessFnPtr
         }
 
         break;
-#ifdef USE_ESCSERIAL
-    case PROTOCOL_SIMONK:
-    case PROTOCOL_BLHELI:
-    case PROTOCOL_KISS:
-    case PROTOCOL_KISSALL:
-    case PROTOCOL_CASTLE:
-        if (escPortIndex < getMotorCount() || (escMode == PROTOCOL_KISS && escPortIndex == ALL_ESCS)) {
-            sbufWriteU8(dst, 1);
-
-            if (mspPostProcessFn) {
-                *mspPostProcessFn = mspEscPassthroughFn;
-            }
-
-            break;
-        }
-#endif
     default:
         sbufWriteU8(dst, 0);
     }

@@ -60,7 +60,6 @@
 #include "sensors/battery.h"
 #include "sensors/gyro.h"
 #include "sensors/gyroanalyse.h"
-#include "sensors/esc_sensor.h"
 
 #include "scheduler/scheduler.h"
 
@@ -245,15 +244,6 @@ cfTask_t cfTasks[TASK_COUNT] = {
         .taskFunc = taskBstMasterProcess,
         .desiredPeriod = TASK_PERIOD_HZ(50),        // 50 Hz, 20ms
         .staticPriority = TASK_PRIORITY_IDLE,
-    },
-#endif
-
-#ifdef USE_ESC_SENSOR
-    [TASK_ESC_SENSOR] = {
-        .taskName = "ESC_SENSOR",
-        .taskFunc = escSensorProcess,
-        .desiredPeriod = TASK_PERIOD_HZ(100),       // 100 Hz, 10ms
-        .staticPriority = TASK_PRIORITY_LOW,
     },
 #endif
 

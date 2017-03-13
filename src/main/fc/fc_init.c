@@ -40,7 +40,6 @@
 #include "drivers/light_led.h"
 #include "drivers/timer.h"
 #include "drivers/serial.h"
-#include "drivers/serial_softserial.h"
 #include "drivers/serial_uart.h"
 #include "drivers/accgyro.h"
 #include "drivers/pwm_esc_detect.h"
@@ -78,7 +77,6 @@
 #include "sensors/acceleration.h"
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
-#include "sensors/esc_sensor.h"
 #include "sensors/gyro.h"
 #include "sensors/initialisation.h"
 #include "sensors/sensors.h"
@@ -361,12 +359,6 @@ void init(void)
 
     // Custom serial printer
     cerealInit();
-
-#ifdef USE_ESC_SENSOR
-    if (feature(FEATURE_ESC_SENSOR)) {
-        escSensorInit();
-    }
-#endif
 
 #ifdef USB_DETECT_PIN
     usbCableDetectInit();

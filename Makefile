@@ -296,7 +296,6 @@ COMMON_SRC = \
             drivers/rx_pwm.c \
             drivers/serial.c \
             drivers/serial_uart.c \
-            drivers/serial_softserial.c \
             drivers/stack_check.c \
             drivers/system.c \
             drivers/timer.c \
@@ -343,8 +342,6 @@ COMMON_SRC = \
             sensors/gyroanalyse.c \
             sensors/initialisation.c \
             common/colorconversion.c \
-            drivers/serial_escserial.c \
-            sensors/esc_sensor.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC)
 
@@ -409,12 +406,10 @@ SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
             sensors/gyroanalyse.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC) \
-            drivers/serial_softserial.c \
             io/dashboard.c \
             io/osd.c \
 
 SIZE_OPTIMISED_SRC := $(SIZE_OPTIMISED_SRC) \
-            drivers/serial_escserial.c \
             drivers/vtx_common.c \
             io/cli.c \
             io/serial_4way.c \
@@ -539,6 +534,7 @@ CFLAGS      += $(ARCH_FLAGS) \
               $(addprefix -I,$(INCLUDE_DIRS)) \
               $(DEBUG_FLAGS) \
               -std=gnu99 \
+              -fdiagnostics-color \
               -Wall -Wextra -Wunsafe-loop-optimizations -Wdouble-promotion \
               -ffunction-sections \
               -fdata-sections \
@@ -554,12 +550,14 @@ CFLAGS      += $(ARCH_FLAGS) \
               -MMD -MP
 
 ASFLAGS     = $(ARCH_FLAGS) \
+			  -fdiagnostics-color \
               -x assembler-with-cpp \
               $(addprefix -I,$(INCLUDE_DIRS)) \
               -MMD -MP
 
 LDFLAGS     = -lm \
               -nostartfiles \
+              -fdiagnostics-color \
               --specs=nano.specs \
               -lc \
               -lnosys \
