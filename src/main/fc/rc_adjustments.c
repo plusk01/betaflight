@@ -324,14 +324,12 @@ static void applyStepAdjustment(controlRateConfig_t *controlRateConfig, uint8_t 
 
 static void applySelectAdjustment(uint8_t adjustmentFunction, uint8_t position)
 {
-    bool applied = false;
 
     switch(adjustmentFunction) {
         case ADJUSTMENT_RATE_PROFILE:
             if (getCurrentControlRateProfileIndex() != position) {
                 changeControlRateProfile(position);
                 blackboxLogInflightAdjustmentEvent(ADJUSTMENT_RATE_PROFILE, position);
-                applied = true;
             }
             break;
     }

@@ -167,13 +167,6 @@ typedef enum {
 uint8_t escMode;
 uint8_t escPortIndex = 0;
 
-#ifdef USE_ESCSERIAL
-static void mspEscPassthroughFn(serialPort_t *serialPort)
-{
-    escEnablePassthrough(serialPort, escPortIndex, escMode);
-}
-#endif
-
 static void mspFc4waySerialCommand(sbuf_t *dst, sbuf_t *src, mspPostProcessFnPtr *mspPostProcessFn)
 {
     const unsigned int dataSize = sbufBytesRemaining(src);
