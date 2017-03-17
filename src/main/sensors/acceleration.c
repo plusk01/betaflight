@@ -117,58 +117,13 @@ bool accDetect(accDev_t *dev, accelerationSensor_e accHardwareToUse)
 {
     accelerationSensor_e accHardware;
 
-#ifdef USE_ACC_ADXL345
-    drv_adxl345_config_t acc_params;
-#endif
-
 retry:
     dev->accAlign = ALIGN_DEFAULT;
 
-    switch (accHardwareToUse) {
-    case ACC_DEFAULT:
-        ; // fallthrough
-    case ACC_ADXL345: // ADXL345
-        ; // fallthrough
-    case ACC_LSM303DLHC:
-        ; // fallthrough
-    case ACC_MPU6050: // MPU6050
-        ; // fallthrough
-    case ACC_MMA8452: // MMA8452
-        ; // fallthrough
-    case ACC_BMA280: // BMA280
-        ; // fallthrough
-    case ACC_MPU6000:
-        ; // fallthrough
-    case ACC_MPU9250:
-        ; // fallthrough
-    case ACC_MPU6500:
-    case ACC_ICM20608G:
-    case ACC_ICM20602:
-#if defined(USE_ACC_MPU6500) || defined(USE_ACC_SPI_MPU6500)
-#ifdef USE_ACC_SPI_MPU6500
-        if (mpu6500AccDetect(dev) || mpu6500SpiAccDetect(dev))
-#else
-        if (mpu6500AccDetect(dev))
-#endif
-        {
-#ifdef ACC_MPU6500_ALIGN
-            dev->accAlign = ACC_MPU6500_ALIGN;
-#endif
-            accHardware = ACC_MPU6500;
-            break;
-        }
-#endif
-        ; // fallthrough
-    case ACC_ICM20689:
-        ; // fallthrough
-    case ACC_BMI160:
-        ; // fallthrough
-    case ACC_FAKE:
-        ; // fallthrough
-    case ACC_NONE: // disable ACC
-        accHardware = ACC_NONE;
-        break;
-
+    if (mpu6500SpiAccDetect(dev))
+    {
+        dev->accAlign = ACC_MPU6500_ALIGN;
+        accHardware = ACC_MPU6500;
     }
 
     // Found anything? Check if error or ACC is really missing.
