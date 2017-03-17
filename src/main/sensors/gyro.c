@@ -49,7 +49,6 @@
 
 #include "sensors/boardalignment.h"
 #include "sensors/gyro.h"
-#include "sensors/gyroanalyse.h"
 #include "sensors/sensors.h"
 
 #ifdef USE_HARDWARE_REVISION_DETECTION

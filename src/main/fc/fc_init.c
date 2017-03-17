@@ -52,10 +52,6 @@
 #include "drivers/usb_io.h"
 #include "drivers/exti.h"
 
-#ifdef USE_BST
-#include "bus_bst.h"
-#endif
-
 #include "fc/config.h"
 #include "fc/fc_init.h"
 #include "fc/fc_msp.h"
@@ -88,62 +84,21 @@
 
 #include "cereal/cereal.h"
 
-#ifdef USE_HARDWARE_REVISION_DETECTION
-#include "hardware_revision.h"
-#endif
-
 #include "build/build_config.h"
 #include "build/debug.h"
 
-#ifdef TARGET_PREINIT
-void targetPreInit(void);
-#endif
-
-#ifdef TARGET_BUS_INIT
-void targetBusInit(void);
-#endif
-
 extern uint8_t motorControlEnable;
-
-#ifdef SOFTSERIAL_LOOPBACK
-serialPort_t *loopbackPort;
-#endif
 
 uint8_t systemState = SYSTEM_STATE_INITIALISING;
 
-void processLoopback(void)
-{
-#ifdef SOFTSERIAL_LOOPBACK
-    if (loopbackPort) {
-        uint8_t bytesWaiting;
-        while ((bytesWaiting = serialRxBytesWaiting(loopbackPort))) {
-            uint8_t b = serialRead(loopbackPort);
-            serialWrite(loopbackPort, b);
-        };
-    }
-#endif
-}
-
 void init(void)
 {
-#ifdef USE_HAL_DRIVER
-    HAL_Init();
-#endif
-
     printfSupportInit();
 
     systemInit();
 
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
-
-#ifdef USE_HARDWARE_REVISION_DETECTION
-    detectHardwareRevision();
-#endif
-
-#ifdef BRUSHED_ESC_AUTODETECT
-    detectBrushedESC();
-#endif
 
     initEEPROM();
 
@@ -152,90 +107,21 @@ void init(void)
 
     systemState |= SYSTEM_STATE_CONFIG_LOADED;
 
-    //i2cSetOverclock(masterConfig.i2c_overclock);
-
     debugMode = systemConfig()->debug_mode;
 
     // Latch active features to be used for feature() in the remainder of init().
     latchActiveFeatures();
 
-#ifdef TARGET_PREINIT
-    targetPreInit();
-#endif
-
     ledInit(statusLedConfig());
     LED2_ON;
 
-#ifdef USE_EXTI
     EXTIInit();
-#endif
-
-#if defined(BUTTONS)
-#ifdef BUTTON_A_PIN
-    IO_t buttonAPin = IOGetByTag(IO_TAG(BUTTON_A_PIN));
-    IOInit(buttonAPin, OWNER_SYSTEM, 0);
-    IOConfigGPIO(buttonAPin, IOCFG_IPU);
-#endif
-
-#ifdef BUTTON_B_PIN
-    IO_t buttonBPin = IOGetByTag(IO_TAG(BUTTON_B_PIN));
-    IOInit(buttonBPin, OWNER_SYSTEM, 0);
-    IOConfigGPIO(buttonBPin, IOCFG_IPU);
-#endif
-
-    // Check status of bind plug and exit if not active
-    delayMicroseconds(10);  // allow configuration to settle
-
-    if (!isMPUSoftReset()) {
-#if defined(BUTTON_A_PIN) && defined(BUTTON_B_PIN)
-        // two buttons required
-        uint8_t secondsRemaining = 5;
-        bool bothButtonsHeld;
-        do {
-            bothButtonsHeld = !IORead(buttonAPin) && !IORead(buttonBPin);
-            if (bothButtonsHeld) {
-                if (--secondsRemaining == 0) {
-                    resetEEPROM();
-                    systemReset();
-                }
-                delay(1000);
-                LED0_TOGGLE;
-            }
-        } while (bothButtonsHeld);
-#endif
-    }
-#endif
-
-#ifdef SPEKTRUM_BIND
-    if (feature(FEATURE_RX_SERIAL)) {
-        switch (rxConfig()->serialrx_provider) {
-        case SERIALRX_SPEKTRUM1024:
-        case SERIALRX_SPEKTRUM2048:
-            // Spektrum satellite binding if enabled on startup.
-            // Must be called before that 100ms sleep so that we don't lose satellite's binding window after startup.
-            // The rest of Spektrum initialization will happen later - via spektrumInit()
-            spektrumBind(rxConfigMutable());
-            break;
-        }
-    }
-#endif
 
     delay(100);
 
     timerInit();  // timer must be initialized before any channel is allocated
 
-#if defined(AVOID_UART1_FOR_PWM_PPM)
-    serialInit(feature(FEATURE_SOFTSERIAL),
-            feature(FEATURE_RX_PPM) || feature(FEATURE_RX_PARALLEL_PWM) ? SERIAL_PORT_USART1 : SERIAL_PORT_NONE);
-#elif defined(AVOID_UART2_FOR_PWM_PPM)
-    serialInit(feature(FEATURE_SOFTSERIAL),
-            feature(FEATURE_RX_PPM) || feature(FEATURE_RX_PARALLEL_PWM) ? SERIAL_PORT_USART2 : SERIAL_PORT_NONE);
-#elif defined(AVOID_UART3_FOR_PWM_PPM)
-    serialInit(feature(FEATURE_SOFTSERIAL),
-            feature(FEATURE_RX_PPM) || feature(FEATURE_RX_PARALLEL_PWM) ? SERIAL_PORT_USART3 : SERIAL_PORT_NONE);
-#else
     serialInit(feature(FEATURE_SOFTSERIAL), SERIAL_PORT_NONE);
-#endif
 
     mixerInit(mixerConfig()->mixerMode);
 
@@ -263,17 +149,7 @@ void init(void)
     systemState |= SYSTEM_STATE_MOTORS_READY;
 
 /* temp until PGs are implemented. */
-#ifdef USE_INVERTER
-    initInverters();
-#endif
 
-#ifdef USE_BST
-    bstInit(BST_DEVICE);
-#endif
-
-#ifdef TARGET_BUS_INIT
-    targetBusInit();
-#else
 
 #ifdef USE_SPI
 #ifdef USE_SPI_DEVICE_1
@@ -305,11 +181,6 @@ void init(void)
 #endif  
 #endif /* USE_I2C */
 
-#endif /* TARGET_BUS_INIT */
-
-#ifdef USE_HARDWARE_REVISION_DETECTION
-    updateHardwareRevision();
-#endif
 
 #ifdef USE_ADC
     /* these can be removed from features! */
@@ -360,10 +231,6 @@ void init(void)
     // Custom serial printer
     cerealInit();
 
-#ifdef USB_DETECT_PIN
-    usbCableDetectInit();
-#endif
-
     if (mixerConfig()->mixerMode == MIXER_GIMBAL) {
         accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
     }
@@ -376,23 +243,10 @@ void init(void)
     ENABLE_STATE(SMALL_ANGLE);
     DISABLE_ARMING_FLAG(PREVENT_ARMING);
 
-#ifdef SOFTSERIAL_LOOPBACK
-    // FIXME this is a hack, perhaps add a FUNCTION_LOOPBACK to support it properly
-    loopbackPort = (serialPort_t*)&(softSerialPorts[0]);
-    if (!loopbackPort->vTable) {
-        loopbackPort = openSoftSerial(0, NULL, 19200, SERIAL_NOT_INVERTED);
-    }
-    serialPrint(loopbackPort, "LOOPBACK\r\n");
-#endif
-
     // Now that everything has powered up the voltage and cell count be determined.
 
     if (feature(FEATURE_VBAT | FEATURE_CURRENT_METER))
         batteryInit();
-
-#ifdef CJMCU
-    LED2_ON;
-#endif
 
     // Latch active features AGAIN since some may be modified by init().
     latchActiveFeatures();

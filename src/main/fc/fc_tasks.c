@@ -33,7 +33,6 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro.h"
 #include "drivers/serial.h"
-#include "drivers/stack_check.h"
 
 #include "fc/config.h"
 #include "fc/fc_msp.h"
@@ -59,15 +58,10 @@
 #include "sensors/acceleration.h"
 #include "sensors/battery.h"
 #include "sensors/gyro.h"
-#include "sensors/gyroanalyse.h"
 
 #include "scheduler/scheduler.h"
 
 #include "cereal/cereal.h"
-
-#ifdef USE_BST
-void taskBstMasterProcess(timeUs_t currentTimeUs);
-#endif
 
 #define TASK_PERIOD_HZ(hz) (1000000 / (hz))
 #define TASK_PERIOD_MS(ms) ((ms) * 1000)
@@ -156,19 +150,6 @@ void fcTasksInit(void)
 
     // custom serial printer
     setTaskEnabled(TASK_CEREAL, true);
-
-#ifdef USE_BST
-    setTaskEnabled(TASK_BST_MASTER_PROCESS, true);
-#endif
-#ifdef USE_ESC_SENSOR
-    setTaskEnabled(TASK_ESC_SENSOR, feature(FEATURE_ESC_SENSOR));
-#endif
-#ifdef STACK_CHECK
-    setTaskEnabled(TASK_STACK_CHECK, true);
-#endif
-#ifdef USE_GYRO_DATA_ANALYSE
-    setTaskEnabled(TASK_GYRO_DATA_ANALYSE, true);
-#endif
 }
 
 cfTask_t cfTasks[TASK_COUNT] = {
@@ -237,31 +218,4 @@ cfTask_t cfTasks[TASK_COUNT] = {
         .desiredPeriod = TASK_PERIOD_HZ(10),
         .staticPriority = TASK_PRIORITY_LOW,
     },
-
-#ifdef USE_BST
-    [TASK_BST_MASTER_PROCESS] = {
-        .taskName = "BST_MASTER_PROCESS",
-        .taskFunc = taskBstMasterProcess,
-        .desiredPeriod = TASK_PERIOD_HZ(50),        // 50 Hz, 20ms
-        .staticPriority = TASK_PRIORITY_IDLE,
-    },
-#endif
-
-#ifdef STACK_CHECK
-    [TASK_STACK_CHECK] = {
-        .taskName = "STACKCHECK",
-        .taskFunc = taskStackCheck,
-        .desiredPeriod = TASK_PERIOD_HZ(10),          // 10 Hz
-        .staticPriority = TASK_PRIORITY_IDLE,
-    },
-#endif
-
-#ifdef USE_GYRO_DATA_ANALYSE
-    [TASK_GYRO_DATA_ANALYSE] = {
-        .taskName = "GYROFFT",
-        .taskFunc = gyroDataAnalyseUpdate,
-        .desiredPeriod = TASK_PERIOD_HZ(100),        // 100 Hz, 10ms
-        .staticPriority = TASK_PRIORITY_MEDIUM,
-    },
-#endif
 };

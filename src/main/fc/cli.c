@@ -60,7 +60,6 @@ extern uint8_t __config_end;
 #include "drivers/rx_pwm.h"
 #include "drivers/sensor.h"
 #include "drivers/serial.h"
-#include "drivers/stack_check.h"
 #include "drivers/system.h"
 #include "drivers/timer.h"
 
@@ -2895,11 +2894,6 @@ static void cliStatus(char *cmdline)
 #else
     const uint16_t i2cErrorCounter = 0;
 #endif
-
-#ifdef STACK_CHECK
-    cliPrintf("Stack used: %d, ", stackUsedSize());
-#endif
-    cliPrintf("Stack size: %d, Stack address: 0x%x\r\n", stackTotalSize(), stackHighMem());
 
 #ifdef USE_PARAMETER_GROUPS
     cliPrintf("I2C Errors: %d, config size: %d, max available config: %d\r\n", i2cErrorCounter, getEEPROMConfigSize(), &__config_end - &__config_start);

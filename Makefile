@@ -296,7 +296,6 @@ COMMON_SRC = \
             drivers/rx_pwm.c \
             drivers/serial.c \
             drivers/serial_uart.c \
-            drivers/stack_check.c \
             drivers/system.c \
             drivers/timer.c \
             fc/config.c \
@@ -339,7 +338,6 @@ COMMON_SRC = \
             sensors/battery.c \
             sensors/boardalignment.c \
             sensors/gyro.c \
-            sensors/gyroanalyse.c \
             sensors/initialisation.c \
             common/colorconversion.c \
             $(CMSIS_SRC) \
