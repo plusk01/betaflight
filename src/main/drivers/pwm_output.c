@@ -35,28 +35,7 @@ bool pwmMotorsEnabled = false;
 
 static void pwmOCConfig(TIM_TypeDef *tim, uint8_t channel, uint16_t value, uint8_t output)
 {
-#if defined(USE_HAL_DRIVER)
-    TIM_HandleTypeDef* Handle = timerFindTimerHandle(tim);
-    if(Handle == NULL) return;
 
-    TIM_OC_InitTypeDef TIM_OCInitStructure;
-
-    TIM_OCInitStructure.OCMode = TIM_OCMODE_PWM1;
-
-    if (output & TIMER_OUTPUT_N_CHANNEL) {
-        TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-        TIM_OCInitStructure.OCNPolarity = (output & TIMER_OUTPUT_INVERTED) ? TIM_OCNPOLARITY_HIGH : TIM_OCNPOLARITY_LOW;
-    } else {
-        TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
-        TIM_OCInitStructure.OCPolarity =  (output & TIMER_OUTPUT_INVERTED) ? TIM_OCPOLARITY_LOW : TIM_OCPOLARITY_HIGH;
-    }
-
-    TIM_OCInitStructure.Pulse = value;
-    TIM_OCInitStructure.OCFastMode = TIM_OCFAST_DISABLE;
-
-    HAL_TIM_PWM_ConfigChannel(Handle, &TIM_OCInitStructure, channel);
-#else
-    #warning "DON'T USE HAL"
     TIM_OCInitTypeDef TIM_OCInitStructure;
 
     TIM_OCStructInit(&TIM_OCInitStructure);
@@ -75,27 +54,18 @@ static void pwmOCConfig(TIM_TypeDef *tim, uint8_t channel, uint16_t value, uint8
 
     timerOCInit(tim, channel, &TIM_OCInitStructure);
     timerOCPreloadConfig(tim, channel, TIM_OCPreload_Enable);
-#endif
 }
 
 static void pwmOutConfig(pwmOutputPort_t *port, const timerHardware_t *timerHardware, uint8_t mhz, uint16_t period, uint16_t value, uint8_t inversion)
 {
-#if defined(USE_HAL_DRIVER)
-    TIM_HandleTypeDef* Handle = timerFindTimerHandle(timerHardware->tim);
-    if(Handle == NULL) return;
-#endif
 
     configTimeBase(timerHardware->tim, period, mhz);
     pwmOCConfig(timerHardware->tim, timerHardware->channel, value,
         inversion ? timerHardware->output ^ TIMER_OUTPUT_INVERTED : timerHardware->output);
 
-#if defined(USE_HAL_DRIVER)
-    HAL_TIM_PWM_Start(Handle, timerHardware->channel);
-    HAL_TIM_Base_Start(Handle);
-#else
+
     TIM_CtrlPWMOutputs(timerHardware->tim, ENABLE);
     TIM_Cmd(timerHardware->tim, ENABLE);
-#endif
 
     port->ccr = timerChCCR(timerHardware);
     port->period = period;
@@ -203,11 +173,8 @@ void motorDevInit(const motorDevConfig_t *motorConfig, uint16_t idlePulse, uint8
         motors[motorIndex].io = IOGetByTag(tag);
 
         IOInit(motors[motorIndex].io, OWNER_MOTOR, RESOURCE_INDEX(motorIndex));
-#if defined(USE_HAL_DRIVER)
-        IOConfigGPIOAF(motors[motorIndex].io, IOCFG_AF_PP, timerHardware->alternateFunction);
-#else
+
         IOConfigGPIO(motors[motorIndex].io, IOCFG_AF_PP);
-#endif
 
         if (useUnsyncedPwm) {
             const uint32_t hz = timerMhzCounter * 1000000;

@@ -22,9 +22,6 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro_mpu.h"
 
-#ifndef MPU_I2C_INSTANCE
-#define MPU_I2C_INSTANCE I2C_DEVICE
-#endif
 
 #define GYRO_LPF_256HZ      0
 #define GYRO_LPF_188HZ      1
