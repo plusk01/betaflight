@@ -94,19 +94,12 @@ PG_RESET_TEMPLATE(gyroConfig_t, gyroConfig,
     .gyroMovementCalibrationThreshold = 48
 );
 
-#if defined(USE_GYRO_MPU6050) || defined(USE_GYRO_MPU3050) || defined(USE_GYRO_MPU6500) || defined(USE_GYRO_SPI_MPU6500) || defined(USE_GYRO_SPI_MPU6000) || defined(USE_ACC_MPU6050) || defined(USE_GYRO_SPI_MPU9250) || defined(USE_GYRO_SPI_ICM20689)
 static const extiConfig_t *selectMPUIntExtiConfig(void)
 {
-#if defined(MPU_INT_EXTI)
     static const extiConfig_t mpuIntExtiConfig = { .tag = IO_TAG(MPU_INT_EXTI) };
     return &mpuIntExtiConfig;
-#elif defined(USE_HARDWARE_REVISION_DETECTION)
-    return selectMPUIntExtiConfigByHardwareRevision();
-#else
-    return NULL;
-#endif
 }
-#endif
+
 
 const mpuConfiguration_t *gyroMpuConfiguration(void)
 {
@@ -145,28 +138,14 @@ STATIC_UNIT_TESTED gyroSensor_e gyroDetect(gyroDev_t *dev)
 bool gyroInit(void)
 {
     memset(&gyro, 0, sizeof(gyro));
-#if defined(USE_GYRO_MPU6050) || defined(USE_GYRO_MPU3050) || defined(USE_GYRO_MPU6500) || defined(USE_GYRO_SPI_MPU6500) || defined(USE_GYRO_SPI_MPU6000) || defined(USE_ACC_MPU6050) || defined(USE_GYRO_SPI_MPU9250) || defined(USE_GYRO_SPI_ICM20689)
+
     gyroDev0.mpuIntExtiConfig = selectMPUIntExtiConfig();
     mpuDetect(&gyroDev0);
     mpuResetFn = gyroDev0.mpuConfiguration.resetFn;
-#endif
+
     const gyroSensor_e gyroHardware = gyroDetect(&gyroDev0);
     if (gyroHardware == GYRO_NONE) {
         return false;
-    }
-
-    switch (gyroHardware) {
-    case GYRO_MPU6500:
-    case GYRO_MPU9250:
-    case GYRO_ICM20689:
-    case GYRO_ICM20608G:
-    case GYRO_ICM20602:
-        // do nothing, as gyro supports 32kHz
-        break;
-    default:
-        // gyro does not support 32kHz
-        gyroConfigMutable()->gyro_use_32khz = false;
-        break;
     }
 
     // Must set gyro sample rate before initialisation
@@ -177,9 +156,7 @@ bool gyroInit(void)
         gyroDev0.gyroAlign = gyroConfig()->gyro_align;
     }
     gyroInitFilters();
-#ifdef USE_GYRO_DATA_ANALYSE
-    gyroDataAnalyseInit(gyro.targetLooptime);
-#endif
+
     return true;
 }
 
@@ -332,9 +309,7 @@ static bool gyroUpdateISR(gyroDev_t* gyroDev)
     if (!gyroDev->dataReady || !gyroDev->read(gyroDev)) {
         return false;
     }
-#ifdef DEBUG_MPU_DATA_READY_INTERRUPT
-    debug[2] = (uint16_t)(micros() & 0xffff);
-#endif
+
     gyroDev->dataReady = false;
     // move gyro data into 32-bit variables to avoid overflows in calculations
     gyroDev->gyroADC[X] = gyroDev->gyroADCRaw[X];
@@ -352,9 +327,7 @@ static bool gyroUpdateISR(gyroDev_t* gyroDev)
         gyroADCf = notchFilter2ApplyFn(notchFilter2[axis], gyroADCf);
         gyro.gyroADCf[axis] = gyroADCf;
     }
-#ifdef USE_GYRO_DATA_ANALYSE
-    gyroDataAnalyse(gyroDev, &gyro);
-#endif
+
     return true;
 }
 #endif
@@ -386,9 +359,7 @@ void gyroUpdate(void)
             return;
         }
 #endif
-#ifdef DEBUG_MPU_DATA_READY_INTERRUPT
-        debug[3] = (uint16_t)(micros() & 0xffff);
-#endif
+
     } else {
         performGyroCalibration(&gyroDev0, gyroConfig()->gyroMovementCalibrationThreshold);
     }
@@ -414,9 +385,7 @@ void gyroUpdate(void)
         gyroDev0.gyroADC[Y] = lrintf(gyro.gyroADCf[Y] / gyroDev0.scale);
         gyroDev0.gyroADC[Z] = lrintf(gyro.gyroADCf[Z] / gyroDev0.scale);
     }
-#ifdef USE_GYRO_DATA_ANALYSE
-    gyroDataAnalyse(&gyroDev0, &gyro);
-#endif
+
 }
 
 void gyroReadTemperature(void)

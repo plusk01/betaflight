@@ -21,7 +21,6 @@
 #include "platform.h"
 
 #include "common/axis.h"
-#include "common/maths.h"
 
 #include "system.h"
 #include "exti.h"
@@ -76,32 +75,32 @@ static void mpu6500SpiInit(void)
     hardwareInitialised = true;
 }
 
-static uint8_t mpuDetected = MPU_NONE;
+static uint8_t mpuDetected = MPU_65xx_SPI;
 uint8_t mpu6500SpiDetect(void)
 {
-    uint8_t tmp;
+    // uint8_t tmp;
 
     mpu6500SpiInit();
 
-    mpu6500ReadRegister(MPU_RA_WHO_AM_I, 1, &tmp);
+    // mpu6500ReadRegister(MPU_RA_WHO_AM_I, 1, &tmp);
 
-    switch (tmp) {
-    case MPU6500_WHO_AM_I_CONST:
-        mpuDetected = MPU_65xx_SPI;
-        break;
-    case MPU9250_WHO_AM_I_CONST:
-    case MPU9255_WHO_AM_I_CONST:
-        mpuDetected = MPU_9250_SPI;
-        break;
-    case ICM20608G_WHO_AM_I_CONST:
-        mpuDetected = ICM_20608_SPI;
-        break;
-    case ICM20602_WHO_AM_I_CONST:
-        mpuDetected = ICM_20602_SPI;
-        break;
-    default:
-        mpuDetected = MPU_NONE;
-    }
+    // switch (tmp) {
+    // case MPU6500_WHO_AM_I_CONST:
+    //     mpuDetected = MPU_65xx_SPI;
+    //     break;
+    // case MPU9250_WHO_AM_I_CONST:
+    // case MPU9255_WHO_AM_I_CONST:
+    //     mpuDetected = MPU_9250_SPI;
+    //     break;
+    // case ICM20608G_WHO_AM_I_CONST:
+    //     mpuDetected = ICM_20608_SPI;
+    //     break;
+    // case ICM20602_WHO_AM_I_CONST:
+    //     mpuDetected = ICM_20602_SPI;
+    //     break;
+    // default:
+    //     mpuDetected = MPU_NONE;
+    // }
     return mpuDetected;
 }
 

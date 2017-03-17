@@ -154,18 +154,11 @@ bool accInit(uint32_t gyroSamplingInverval)
     }
     acc.dev.acc_1G = 256; // set default
     acc.dev.init(&acc.dev); // driver initialisation
+
     // set the acc sampling interval according to the gyro sampling interval
-    switch (gyroSamplingInverval) {  // Switch statement kept in place to change acc sampling interval in the future
-    case 500:
-    case 375:
-    case 250:
-    case 125:
-        acc.accSamplingInterval = 1000;
-        break;
-    case 1000:
-    default:
-        acc.accSamplingInterval = 1000;
-    }
+    UNUSED(gyroSamplingInverval);
+    acc.accSamplingInterval = 1000;
+
     if (accLpfCutHz) {
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilterInitLPF(&accFilter[axis], accLpfCutHz, acc.accSamplingInterval);
