@@ -29,27 +29,27 @@ struct ioPortDef_s {
 };
 
 #if defined(STM32F1)
-const struct ioPortDef_s ioPortDefs[] = {
-    { RCC_APB2(IOPA) },
-    { RCC_APB2(IOPB) },
-    { RCC_APB2(IOPC) },
-    { RCC_APB2(IOPD) },
-    { RCC_APB2(IOPE) },
-{
-#if defined (STM32F10X_HD) || defined (STM32F10X_XL) || defined (STM32F10X_HD_VL)
-    RCC_APB2(IOPF),
-#else
-    0,
-#endif
-},
-{
-#if defined (STM32F10X_HD) || defined (STM32F10X_XL) || defined (STM32F10X_HD_VL)
-    RCC_APB2(IOPG),
-#else
-    0,
-#endif
-},
-};
+// const struct ioPortDef_s ioPortDefs[] = {
+//     { RCC_APB2(IOPA) },
+//     { RCC_APB2(IOPB) },
+//     { RCC_APB2(IOPC) },
+//     { RCC_APB2(IOPD) },
+//     { RCC_APB2(IOPE) },
+// {
+// #if defined (STM32F10X_HD) || defined (STM32F10X_XL) || defined (STM32F10X_HD_VL)
+//     RCC_APB2(IOPF),
+// #else
+//     0,
+// #endif
+// },
+// {
+// #if defined (STM32F10X_HD) || defined (STM32F10X_XL) || defined (STM32F10X_HD_VL)
+//     RCC_APB2(IOPG),
+// #else
+//     0,
+// #endif
+// },
+// };
 #elif defined(STM32F3)
 const struct ioPortDef_s ioPortDefs[] = {
     { RCC_AHB(GPIOA) },
@@ -60,23 +60,23 @@ const struct ioPortDef_s ioPortDefs[] = {
     { RCC_AHB(GPIOF) },
 };
 #elif defined(STM32F4)
-const struct ioPortDef_s ioPortDefs[] = {
-    { RCC_AHB1(GPIOA) },
-    { RCC_AHB1(GPIOB) },
-    { RCC_AHB1(GPIOC) },
-    { RCC_AHB1(GPIOD) },
-    { RCC_AHB1(GPIOE) },
-    { RCC_AHB1(GPIOF) },
-};
+// const struct ioPortDef_s ioPortDefs[] = {
+//     { RCC_AHB1(GPIOA) },
+//     { RCC_AHB1(GPIOB) },
+//     { RCC_AHB1(GPIOC) },
+//     { RCC_AHB1(GPIOD) },
+//     { RCC_AHB1(GPIOE) },
+//     { RCC_AHB1(GPIOF) },
+// };
 #elif defined(STM32F7)
-const struct ioPortDef_s ioPortDefs[] = {
-    { RCC_AHB1(GPIOA) },
-    { RCC_AHB1(GPIOB) },
-    { RCC_AHB1(GPIOC) },
-    { RCC_AHB1(GPIOD) },
-    { RCC_AHB1(GPIOE) },
-    { RCC_AHB1(GPIOF) },
-};
+// const struct ioPortDef_s ioPortDefs[] = {
+//     { RCC_AHB1(GPIOA) },
+//     { RCC_AHB1(GPIOB) },
+//     { RCC_AHB1(GPIOC) },
+//     { RCC_AHB1(GPIOD) },
+//     { RCC_AHB1(GPIOE) },
+//     { RCC_AHB1(GPIOF) },
+// };
 #endif
 
 ioRec_t* IO_Rec(IO_t io)
@@ -255,59 +255,6 @@ resourceOwner_e IOGetOwner(IO_t io)
     return ioRec->owner;
 }
 
-#if defined(STM32F1)
-
-void IOConfigGPIO(IO_t io, ioConfig_t cfg)
-{
-    if (!io)
-        return;
-    rccPeriphTag_t rcc = ioPortDefs[IO_GPIOPortIdx(io)].rcc;
-    RCC_ClockCmd(rcc, ENABLE);
-
-    GPIO_InitTypeDef init = {
-        .GPIO_Pin = IO_Pin(io),
-        .GPIO_Speed = cfg & 0x03,
-        .GPIO_Mode = cfg & 0x7c,
-    };
-    GPIO_Init(IO_GPIO(io), &init);
-}
-
-#elif defined(STM32F7)
-
-void IOConfigGPIO(IO_t io, ioConfig_t cfg)
-{
-    if (!io)
-        return;
-    rccPeriphTag_t rcc = ioPortDefs[IO_GPIOPortIdx(io)].rcc;
-    RCC_ClockCmd(rcc, ENABLE);
-
-    GPIO_InitTypeDef init = {
-        .Pin = IO_Pin(io),
-        .Mode = (cfg >> 0) & 0x13,
-        .Speed = (cfg >> 2) & 0x03,
-        .Pull = (cfg >> 5) & 0x03,
-    };
-    HAL_GPIO_Init(IO_GPIO(io), &init);
-}
-
-void IOConfigGPIOAF(IO_t io, ioConfig_t cfg, uint8_t af)
-{
-    if (!io)
-        return;
-    rccPeriphTag_t rcc = ioPortDefs[IO_GPIOPortIdx(io)].rcc;
-    RCC_ClockCmd(rcc, ENABLE);
-
-    GPIO_InitTypeDef init = {
-        .Pin = IO_Pin(io),
-        .Mode = (cfg >> 0) & 0x13,
-        .Speed = (cfg >> 2) & 0x03,
-        .Pull = (cfg >> 5) & 0x03,
-        .Alternate = af
-    };
-    HAL_GPIO_Init(IO_GPIO(io), &init);
-}
-#elif defined(STM32F3) || defined(STM32F4)
-
 void IOConfigGPIO(IO_t io, ioConfig_t cfg)
 {
     if (!io)
@@ -343,7 +290,6 @@ void IOConfigGPIOAF(IO_t io, ioConfig_t cfg, uint8_t af)
     };
     GPIO_Init(IO_GPIO(io), &init);
 }
-#endif
 
 static const uint16_t ioDefUsedMask[DEFIO_PORT_USED_COUNT] = { DEFIO_PORT_USED_LIST };
 static const uint8_t ioDefUsedOffset[DEFIO_PORT_USED_COUNT] = { DEFIO_PORT_OFFSET_LIST };

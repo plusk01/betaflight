@@ -145,69 +145,103 @@ serialPort_t *uartOpen(USART_TypeDef *USARTx, serialReceiveCallbackPtr rxCallbac
     s->port.baudRate = baudRate;
     s->port.options = options;
 
-    uartReconfigure(s);
 
-    // Receive DMA or IRQ
-    DMA_InitTypeDef DMA_InitStructure;
-    if (mode & MODE_RX) {
 
-        if (s->rxDMAChannel) {
-            DMA_StructInit(&DMA_InitStructure);
-            DMA_InitStructure.DMA_PeripheralBaseAddr = s->rxDMAPeripheralBaseAddr;
-            DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-            DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-            DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-            DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-            DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-            DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    
+    
+    /* Enable USART1 */
+    // USART_Cmd(USART1, DISABLE);  
+    /* Baud rate 9600, 8-bit data, One stop bit
+     * No parity, Do both Rx and Tx, No HW flow control
+     */
+    /* USART configuration structure for USART1 */
+    USART_InitTypeDef usart1_init_struct;
+    usart1_init_struct.USART_BaudRate = 115200;   
+    usart1_init_struct.USART_WordLength = USART_WordLength_8b;  
+    usart1_init_struct.USART_StopBits = USART_StopBits_1;   
+    usart1_init_struct.USART_Parity = USART_Parity_No ;
+    usart1_init_struct.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+    usart1_init_struct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    /* Configure USART1 */
+    USART_Init(USART1, &usart1_init_struct);
 
-            DMA_InitStructure.DMA_BufferSize = s->port.rxBufferSize;
+    // usartConfigurePinInversion(s);
 
-            DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-            DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)s->port.rxBuffer;
-            DMA_DeInit(s->rxDMAChannel);
-            DMA_Init(s->rxDMAChannel, &DMA_InitStructure);
-            DMA_Cmd(s->rxDMAChannel, ENABLE);
-            USART_DMACmd(s->USARTx, USART_DMAReq_Rx, ENABLE);
-            s->rxDMAPos = DMA_GetCurrDataCounter(s->rxDMAChannel);
-        } else {
-            USART_ClearITPendingBit(s->USARTx, USART_IT_RXNE);
-            USART_ITConfig(s->USARTx, USART_IT_RXNE, ENABLE);
-        }
-    }
+    /* Enable RXNE interrupt */
+    USART_ClearITPendingBit(s->USARTx, USART_IT_RXNE);
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    /* Enable USART1 global interrupt */
+    NVIC_EnableIRQ(USART1_IRQn);
 
-    // Transmit DMA or IRQ
-    if (mode & MODE_TX) {
-        if (s->txDMAChannel) {
-            DMA_StructInit(&DMA_InitStructure);
-            DMA_InitStructure.DMA_PeripheralBaseAddr = s->txDMAPeripheralBaseAddr;
-            DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-            DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-            DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-            DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-            DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-            DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    USART_Cmd(USART1, ENABLE);  
 
-            DMA_InitStructure.DMA_BufferSize = s->port.txBufferSize;
-
-            DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-            DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-            DMA_DeInit(s->txDMAChannel);
-            DMA_Init(s->txDMAChannel, &DMA_InitStructure);
-            DMA_ITConfig(s->txDMAChannel, DMA_IT_TC, ENABLE);
-            DMA_SetCurrDataCounter(s->txDMAChannel, 0);
-            s->txDMAChannel->CNDTR = 0;
-
-            USART_DMACmd(s->USARTx, USART_DMAReq_Tx, ENABLE);
-        } else {
-            USART_ITConfig(s->USARTx, USART_IT_TXE, ENABLE);
-        }
-    }
-
-    USART_Cmd(s->USARTx, ENABLE);
 
     return (serialPort_t *)s;
+
+
+    // uartReconfigure(s);
+
+    // // Receive DMA or IRQ
+    // // DMA_InitTypeDef DMA_InitStructure;
+    // if (mode & MODE_RX) {
+
+    //     // if (s->rxDMAChannel) {
+    //     //     DMA_StructInit(&DMA_InitStructure);
+    //     //     DMA_InitStructure.DMA_PeripheralBaseAddr = s->rxDMAPeripheralBaseAddr;
+    //     //     DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
+    //     //     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+    //     //     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    //     //     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    //     //     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    //     //     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+
+    //     //     DMA_InitStructure.DMA_BufferSize = s->port.rxBufferSize;
+
+    //     //     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+    //     //     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+    //     //     DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)s->port.rxBuffer;
+    //     //     DMA_DeInit(s->rxDMAChannel);
+    //     //     DMA_Init(s->rxDMAChannel, &DMA_InitStructure);
+    //     //     DMA_Cmd(s->rxDMAChannel, ENABLE);
+    //     //     USART_DMACmd(s->USARTx, USART_DMAReq_Rx, ENABLE);
+    //     //     s->rxDMAPos = DMA_GetCurrDataCounter(s->rxDMAChannel);
+    //     // } else {
+    //         USART_ClearITPendingBit(s->USARTx, USART_IT_RXNE);
+    //         USART_ITConfig(s->USARTx, USART_IT_RXNE, ENABLE);
+    //     // }
+    // }
+
+    // // Transmit DMA or IRQ
+    // if (mode & MODE_TX) {
+    //     // if (s->txDMAChannel) {
+    //     //     DMA_StructInit(&DMA_InitStructure);
+    //     //     DMA_InitStructure.DMA_PeripheralBaseAddr = s->txDMAPeripheralBaseAddr;
+    //     //     DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
+    //     //     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+    //     //     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    //     //     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    //     //     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    //     //     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+
+    //     //     DMA_InitStructure.DMA_BufferSize = s->port.txBufferSize;
+
+    //     //     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+    //     //     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+    //     //     DMA_DeInit(s->txDMAChannel);
+    //     //     DMA_Init(s->txDMAChannel, &DMA_InitStructure);
+    //     //     DMA_ITConfig(s->txDMAChannel, DMA_IT_TC, ENABLE);
+    //     //     DMA_SetCurrDataCounter(s->txDMAChannel, 0);
+    //     //     s->txDMAChannel->CNDTR = 0;
+
+    //     //     USART_DMACmd(s->USARTx, USART_DMAReq_Tx, ENABLE);
+    //     // } else {
+    //         // USART_ITConfig(s->USARTx, USART_IT_TXE, ENABLE);
+    //     // }
+    // }
+
+    // USART_Cmd(s->USARTx, ENABLE);
+
+    // return (serialPort_t *)s;
 }
 
 void uartSetBaudRate(serialPort_t *instance, uint32_t baudRate)

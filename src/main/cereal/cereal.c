@@ -12,7 +12,7 @@
 
 #include "sensors/acceleration.h"
 
-#define CEREAL_INITIAL_PORT_MODE    MODE_TX
+#define CEREAL_INITIAL_PORT_MODE    (MODE_TX|MODE_RX)
 
 static serialPort_t *cerealPort = NULL;
 static bool cerealPortEnabled = false;

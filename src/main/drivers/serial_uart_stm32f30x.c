@@ -99,45 +99,64 @@ static uartPort_t uartPort4;
 static uartPort_t uartPort5;
 #endif
 
-#if defined(USE_UART1_TX_DMA) || defined(USE_UART2_TX_DMA) || defined(USE_UART3_TX_DMA)
-static void handleUsartTxDma(dmaChannelDescriptor_t* descriptor)
-{
-    uartPort_t *s = (uartPort_t*)(descriptor->userParam);
-    DMA_CLEAR_FLAG(descriptor, DMA_IT_TCIF);
-    DMA_Cmd(descriptor->ref, DISABLE);
+// #if defined(USE_UART1_TX_DMA) || defined(USE_UART2_TX_DMA) || defined(USE_UART3_TX_DMA)
+// static void handleUsartTxDma(dmaChannelDescriptor_t* descriptor)
+// {
+//     uartPort_t *s = (uartPort_t*)(descriptor->userParam);
+//     DMA_CLEAR_FLAG(descriptor, DMA_IT_TCIF);
+//     DMA_Cmd(descriptor->ref, DISABLE);
 
-    if (s->port.txBufferHead != s->port.txBufferTail)
-        uartStartTxDMA(s);
-    else
-        s->txDMAEmpty = true;
-}
-#endif
+//     if (s->port.txBufferHead != s->port.txBufferTail)
+//         uartStartTxDMA(s);
+//     else
+//         s->txDMAEmpty = true;
+// }
+// #endif
 
 void serialUARTInit(IO_t tx, IO_t rx, portMode_t mode, portOptions_t options, uint8_t af, uint8_t index)
 {
-    if (options & SERIAL_BIDIR) {
-        ioConfig_t ioCfg = IO_CONFIG(GPIO_Mode_AF, GPIO_Speed_50MHz,
-            ((options & SERIAL_INVERTED) || (options & SERIAL_BIDIR_PP)) ? GPIO_OType_PP : GPIO_OType_OD,
-            ((options & SERIAL_INVERTED) || (options & SERIAL_BIDIR_PP)) ? GPIO_PuPd_DOWN : GPIO_PuPd_UP
-        );
+    UNUSED(index);
+    UNUSED(options);
+    // if (options & SERIAL_BIDIR) {
+    //     ioConfig_t ioCfg = IO_CONFIG(GPIO_Mode_AF, GPIO_Speed_50MHz,
+    //         ((options & SERIAL_INVERTED) || (options & SERIAL_BIDIR_PP)) ? GPIO_OType_PP : GPIO_OType_OD,
+    //         ((options & SERIAL_INVERTED) || (options & SERIAL_BIDIR_PP)) ? GPIO_PuPd_DOWN : GPIO_PuPd_UP
+    //     );
 
-        IOInit(tx, OWNER_SERIAL_TX, index);
-        IOConfigGPIOAF(tx, ioCfg, af);
+    //     IOInit(tx, OWNER_SERIAL_TX, index);
+    //     IOConfigGPIOAF(tx, ioCfg, af);
 
-        if (!(options & SERIAL_INVERTED))
-            IOLo(tx);   // OpenDrain output should be inactive
-    } else {
-        ioConfig_t ioCfg = IO_CONFIG(GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, (options & SERIAL_INVERTED) ? GPIO_PuPd_DOWN : GPIO_PuPd_UP);
+    //     if (!(options & SERIAL_INVERTED))
+    //         IOLo(tx);   // OpenDrain output should be inactive
+    // } else {
+        // ioConfig_t ioCfg = IO_CONFIG(GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, (options & SERIAL_INVERTED) ? GPIO_PuPd_DOWN : GPIO_PuPd_UP);
+        ioConfig_t ioCfg = IO_CONFIG(GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_UP);
         if (mode & MODE_TX) {
-            IOInit(tx, OWNER_SERIAL_TX, index);
-            IOConfigGPIOAF(tx, ioCfg, af);
+            // IOInit(tx, OWNER_SERIAL_TX, index);
+            // IOConfigGPIOAF(tx, ioCfg, af);
+
+
+            // pcl version
+            RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+                                    
+            /* GPIOA PIN9 alternative function Tx */
+            GPIO_InitTypeDef gpiob_init_struct;
+            gpiob_init_struct.GPIO_Pin = GPIO_Pin_9;
+            gpiob_init_struct.GPIO_Speed = GPIO_Speed_50MHz;
+            gpiob_init_struct.GPIO_Mode = GPIO_Mode_AF;
+            gpiob_init_struct.GPIO_OType = GPIO_OType_PP;
+            gpiob_init_struct.GPIO_PuPd = GPIO_PuPd_UP;
+            GPIO_Init(GPIOA, &gpiob_init_struct);
+
+            GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_7);
+
         }
 
         if (mode & MODE_RX) {
-            IOInit(rx, OWNER_SERIAL_RX, index);
+            // IOInit(rx, OWNER_SERIAL_RX, index);
             IOConfigGPIOAF(rx, ioCfg, af);
         }
-    }
+    // }
 }
 
 #ifdef USE_UART1
@@ -169,7 +188,8 @@ uartPort_t *serialUART1(uint32_t baudRate, portMode_t mode, portOptions_t option
 //     s->txDMAPeripheralBaseAddr = (uint32_t)&s->USARTx->TDR;
 // #endif
 
-    RCC_ClockCmd(RCC_APB2(USART1), ENABLE);
+    // RCC_ClockCmd(RCC_APB2(USART1), ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);   // pcl 
 
 // #if defined(USE_UART1_TX_DMA) || defined(USE_UART1_RX_DMA)
 //     RCC_ClockCmd(RCC_AHB(DMA1), ENABLE);
@@ -182,15 +202,18 @@ uartPort_t *serialUART1(uint32_t baudRate, portMode_t mode, portOptions_t option
 //     dmaSetHandler(DMA1_CH4_HANDLER, handleUsartTxDma, NVIC_PRIO_SERIALUART1_TXDMA, (uint32_t)&uartPort1);
 // #endif
 
-#ifndef USE_UART1_RX_DMA
-    NVIC_InitTypeDef NVIC_InitStructure;
+// #ifndef USE_UART1_RX_DMA
+//     NVIC_InitTypeDef NVIC_InitStructure;
 
-    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = NVIC_PRIORITY_BASE(NVIC_PRIO_SERIALUART1_RXDMA);
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = NVIC_PRIORITY_SUB(NVIC_PRIO_SERIALUART1_RXDMA);
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-#endif
+//     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+//     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = NVIC_PRIORITY_BASE(NVIC_PRIO_SERIALUART1_RXDMA);
+//     NVIC_InitStructure.NVIC_IRQChannelSubPriority = NVIC_PRIORITY_SUB(NVIC_PRIO_SERIALUART1_RXDMA);
+//     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+//     NVIC_Init(&NVIC_InitStructure);
+// #endif
+
+    // pcl
+    NVIC_EnableIRQ(USART1_IRQn);
 
     return s;
 }
