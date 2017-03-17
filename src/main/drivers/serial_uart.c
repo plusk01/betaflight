@@ -403,13 +403,8 @@ void uartWrite(serialPort_t *instance, uint8_t ch)
         s->port.txBufferHead++;
     }
 
-#ifdef STM32F4
-    if (s->txDMAStream) {
-        if (!(s->txDMAStream->CR & 1))
-#else
     if (s->txDMAChannel) {
         if (!(s->txDMAChannel->CCR & 1))
-#endif
             uartStartTxDMA(s);
     } else {
         USART_ITConfig(s->USARTx, USART_IT_TXE, ENABLE);
