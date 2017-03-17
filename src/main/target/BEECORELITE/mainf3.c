@@ -42,7 +42,10 @@
 #include "drivers/serial.h"
 #include "drivers/serial_uart.h"
 #include "drivers/gpio.h"
-// #include "drivers/accgyro.h"
+#include "drivers/accgyro.h"
+#include "drivers/accgyro_mpu.h"
+#include "drivers/accgyro_mpu6500.h"
+#include "drivers/accgyro_spi_mpu6500.h"
 // #include "drivers/pwm_esc_detect.h"
 // #include "drivers/rx_pwm.h"
 // #include "drivers/pwm_output.h"
@@ -76,7 +79,7 @@
 // #include "sensors/battery.h"
 // #include "sensors/boardalignment.h"
 // #include "sensors/gyro.h"
-#include "sensors/initialisation.h"
+// #include "sensors/initialisation.h"
 // #include "sensors/sensors.h"
 
 // #include "flight/failsafe.h"
@@ -90,6 +93,9 @@
 static serialPort_t *serial0 = NULL;
 static serialPort_t *cereal = NULL;
 
+static accDev_t accDev;
+static gyroDev_t gyroDev;
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -102,6 +108,127 @@ void LEDInit() {
 
     gpioInit(GPIOB, &cfg);
 }
+
+static const extiConfig_t *selectMPUIntExtiConfig(void)
+{
+    static const extiConfig_t mpuIntExtiConfig = { .tag = IO_TAG(MPU_INT_EXTI) };
+    return &mpuIntExtiConfig;
+}
+
+bool myGyroDetect(gyroDev_t *dev) {
+    // gyroSensor_e gyroHardware = GYRO_DEFAULT;
+
+    dev->gyroAlign = ALIGN_DEFAULT;
+
+
+
+    if (mpu6500SpiGyroDetect(dev)) {
+        // gyroHardware = GYRO_MPU6500;
+
+        dev->gyroAlign = GYRO_MPU6500_ALIGN;
+        return true;
+    }
+
+
+
+    // if (gyroHardware != GYRO_NONE) {
+    //     detectedSensors[SENSOR_INDEX_GYRO] = gyroHardware;
+    //     sensorsSet(SENSOR_GYRO);
+    // }
+
+
+    return false;
+}
+
+bool myGyroInit(void) {
+    // memset(&gyroDev, 0, sizeof(gyroDev));
+
+    gyroDev.mpuIntExtiConfig = selectMPUIntExtiConfig();
+    mpuDetect(&gyroDev);
+    // mpuResetFn = gyroDev.mpuConfiguration.resetFn;
+
+
+    // const gyroSensor_e gyroHardware = gyroDetect(&gyroDev);
+    // if (gyroHardware == GYRO_NONE) {
+    //     return false;
+    // }
+
+    if (!myGyroDetect(&gyroDev))
+        return false;
+
+    // Must set gyro sample rate before initialisation
+    // gyro.targetLooptime = gyroSetSampleRate(&gyroDev, gyroConfig()->gyro_lpf, gyroConfig()->gyro_sync_denom, gyroConfig()->gyro_use_32khz);
+    // gyroDev.lpf = gyroConfig()->gyro_lpf;
+    gyroDev.init(&gyroDev);
+    if (gyroConfig()->gyro_align != ALIGN_DEFAULT) {
+        gyroDev.gyroAlign = gyroConfig()->gyro_align;
+    }
+    // gyroInitFilters();
+
+    printf("here");
+    return true;
+}
+
+#if 0
+
+bool accDetect(accDev_t *dev, accelerationSensor_e accHardwareToUse)
+{
+    accelerationSensor_e accHardware;
+
+retry:
+    dev->accAlign = ALIGN_DEFAULT;
+
+    if (mpu6500SpiAccDetect(dev))
+    {
+        dev->accAlign = ACC_MPU6500_ALIGN;
+        accHardware = ACC_MPU6500;
+    }
+
+    // Found anything? Check if error or ACC is really missing.
+    if (accHardware == ACC_NONE && accHardwareToUse != ACC_DEFAULT && accHardwareToUse != ACC_NONE) {
+        // Nothing was found and we have a forced sensor that isn't present.
+        accHardwareToUse = ACC_DEFAULT;
+        goto retry;
+    }
+
+
+    if (accHardware == ACC_NONE) {
+        return false;
+    }
+
+    detectedSensors[SENSOR_INDEX_ACC] = accHardware;
+    sensorsSet(SENSOR_ACC);
+    return true;
+}
+
+bool accInit(uint32_t gyroSamplingInverval)
+{
+    memset(&acc, 0, sizeof(acc));
+    // copy over the common gyro mpu settings
+    acc.dev.mpuConfiguration = *gyroMpuConfiguration();
+    acc.dev.mpuDetectionResult = *gyroMpuDetectionResult();
+    if (!accDetect(&acc.dev, accelerometerConfig()->acc_hardware)) {
+        return false;
+    }
+    acc.dev.acc_1G = 256; // set default
+    acc.dev.init(&acc.dev); // driver initialisation
+
+    // set the acc sampling interval according to the gyro sampling interval
+    UNUSED(gyroSamplingInverval);
+    acc.accSamplingInterval = 1000;
+
+    if (accLpfCutHz) {
+        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+            biquadFilterInitLPF(&accFilter[axis], accLpfCutHz, acc.accSamplingInterval);
+        }
+    }
+    if (accelerometerConfig()->acc_align != ALIGN_DEFAULT) {
+        acc.dev.accAlign = accelerometerConfig()->acc_align;
+    }
+    return true;
+}
+
+#endif
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -151,7 +278,12 @@ void setup() {
     setPrintfSerialPort(cereal);
     printf("printf Configured!\n");
 
-    sensorsAutodetect();
+    // sensorsAutodetect();
+
+    // -----------------------
+
+    myGyroInit();
+    // accInit();
 
 }
 
@@ -162,9 +294,12 @@ void loop() {
     static uint16_t i = 0;
 
     // print
-    accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
+    // accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
 
-    printf("Current Time: %d\n", ++i);
+    gyroDev.read(&gyroDev);
+
+    printf("Current Time: %d", ++i);
+    printf("\t gyro.gyroADCRaw[0]: %d\n", gyroDev.gyroADCRaw[0]);
     // printf("\t acc.smooth[0]: %d", acc.accSmooth[0]);
     // printf("\t acc.dev.ADCRaw[0]: %d\n", acc.dev.ADCRaw[0]);
 
