@@ -159,28 +159,28 @@ uartPort_t *serialUART1(uint32_t baudRate, portMode_t mode, portOptions_t option
 
     s->USARTx = USART1;
 
-#ifdef USE_UART1_RX_DMA
-    dmaInit(DMA1_CH5_HANDLER, OWNER_SERIAL, 1);
-    s->rxDMAChannel = DMA1_Channel5;
-    s->rxDMAPeripheralBaseAddr = (uint32_t)&s->USARTx->RDR;
-#endif
-#ifdef USE_UART1_TX_DMA
-    s->txDMAChannel = DMA1_Channel4;
-    s->txDMAPeripheralBaseAddr = (uint32_t)&s->USARTx->TDR;
-#endif
+// #ifdef USE_UART1_RX_DMA
+//     dmaInit(DMA1_CH5_HANDLER, OWNER_SERIAL, 1);
+//     s->rxDMAChannel = DMA1_Channel5;
+//     s->rxDMAPeripheralBaseAddr = (uint32_t)&s->USARTx->RDR;
+// #endif
+// #ifdef USE_UART1_TX_DMA
+//     s->txDMAChannel = DMA1_Channel4;
+//     s->txDMAPeripheralBaseAddr = (uint32_t)&s->USARTx->TDR;
+// #endif
 
     RCC_ClockCmd(RCC_APB2(USART1), ENABLE);
 
-#if defined(USE_UART1_TX_DMA) || defined(USE_UART1_RX_DMA)
-    RCC_ClockCmd(RCC_AHB(DMA1), ENABLE);
-#endif
+// #if defined(USE_UART1_TX_DMA) || defined(USE_UART1_RX_DMA)
+//     RCC_ClockCmd(RCC_AHB(DMA1), ENABLE);
+// #endif
 
     serialUARTInit(IOGetByTag(IO_TAG(UART1_TX_PIN)), IOGetByTag(IO_TAG(UART1_RX_PIN)), mode, options, GPIO_AF_7, 1);
 
-#ifdef USE_UART1_TX_DMA
-    dmaInit(DMA1_CH4_HANDLER, OWNER_SERIAL, 1);
-    dmaSetHandler(DMA1_CH4_HANDLER, handleUsartTxDma, NVIC_PRIO_SERIALUART1_TXDMA, (uint32_t)&uartPort1);
-#endif
+// #ifdef USE_UART1_TX_DMA
+//     dmaInit(DMA1_CH4_HANDLER, OWNER_SERIAL, 1);
+//     dmaSetHandler(DMA1_CH4_HANDLER, handleUsartTxDma, NVIC_PRIO_SERIALUART1_TXDMA, (uint32_t)&uartPort1);
+// #endif
 
 #ifndef USE_UART1_RX_DMA
     NVIC_InitTypeDef NVIC_InitStructure;
