@@ -52,6 +52,7 @@
 // #include "drivers/inverter.h"
 // #include "drivers/usb_io.h"
 // #include "drivers/exti.h"
+#include "drivers/serial_usb_vcp.h"
 
 // #include "fc/config.h"
 // #include "fc/fc_init.h"
@@ -88,6 +89,8 @@
 // #include "build/build_config.h"
 // #include "build/debug.h"
 
+serialPort_t *serial0 = NULL;
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -101,25 +104,27 @@ void LEDInit() {
     gpioInit(GPIOB, &cfg);
 }
 
-
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 void setup() {
+
+    // common/printf.h
     printfSupportInit();
 
+    // drivers/system.h (system_stm32f30x.c)
     systemInit();
 
+    // drivers/io.h
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
 
-    initEEPROM();
+    // initEEPROM();
 
-    ensureEEPROMContainsValidData();
-    readEEPROM();
+    // ensureEEPROMContainsValidData();
+    // readEEPROM();
 
     ledInit(statusLedConfig());
-    LED2_ON;
 
     EXTIInit();
 
@@ -127,8 +132,10 @@ void setup() {
 
     timerInit();  // timer must be initialized before any channel is allocated
 
+    // this initializes some structure that helps manage USARTs
     serialInit(feature(FEATURE_SOFTSERIAL), SERIAL_PORT_NONE);
 
+    // For MPU6500
     spiInit(SPIDEV_1);
 
     // Custom serial printer
@@ -137,14 +144,19 @@ void setup() {
     // led GPIOB_Pin_8
     LEDInit();
 
+    // open the USB VCP
+    serial0 = usbVcpOpen();
+
 }
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 void loop() {
+    static uint16_t i = 0;
+
     // print
-    cerealProcess(5);
+    cerealProcess(++i);
 
     digitalHi(GPIOB, GPIO_Pin_8);   // turn the LED on (HIGH is the voltage level)
     delay(500);               // wait for a second
@@ -157,6 +169,17 @@ void loop() {
 
 int main(void) {
     setup();
-    while(1)
+    while(1) {
+
+        // allow reboot to happen for flashing
+        while(serialRxBytesWaiting(serial0)) {
+            const uint8_t c = serialRead(serial0);
+
+            if (c == 'R') {
+                systemResetToBootloader();
+            }
+        }
+
         loop();
+    }
 }
