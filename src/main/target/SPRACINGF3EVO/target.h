@@ -71,17 +71,17 @@
 
 #define USE_SPI
 #define USE_SPI_DEVICE_1 // PB9,3,4,5 on AF5 SPI1 (MPU)
-#define USE_SPI_DEVICE_2 // PB12,13,14,15 on AF5 SPI2 (SDCard)
+// #define USE_SPI_DEVICE_2 // PB12,13,14,15 on AF5 SPI2 (SDCard)
 
 #define SPI1_NSS_PIN            PB9
 #define SPI1_SCK_PIN            PB3
 #define SPI1_MISO_PIN           PB4
 #define SPI1_MOSI_PIN           PB5
 
-#define SPI2_NSS_PIN            PB12
-#define SPI2_SCK_PIN            PB13
-#define SPI2_MISO_PIN           PB14
-#define SPI2_MOSI_PIN           PB15
+// #define SPI2_NSS_PIN            PB12
+// #define SPI2_SCK_PIN            PB13
+// #define SPI2_MISO_PIN           PB14
+// #define SPI2_MOSI_PIN           PB15
 
 #define MPU6500_CS_PIN                   PB9
 #define MPU6500_SPI_INSTANCE             SPI1
