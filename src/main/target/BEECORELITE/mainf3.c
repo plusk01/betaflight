@@ -76,7 +76,7 @@
 // #include "sensors/battery.h"
 // #include "sensors/boardalignment.h"
 // #include "sensors/gyro.h"
-// #include "sensors/initialisation.h"
+#include "sensors/initialisation.h"
 // #include "sensors/sensors.h"
 
 // #include "flight/failsafe.h"
@@ -84,12 +84,11 @@
 // #include "flight/mixer.h"
 // #include "flight/pid.h"
 
-#include "cereal/cereal.h"
-
 // #include "build/build_config.h"
 // #include "build/debug.h"
 
-serialPort_t *serial0 = NULL;
+static serialPort_t *serial0 = NULL;
+static serialPort_t *cereal = NULL;
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -139,13 +138,20 @@ void setup() {
     spiInit(SPIDEV_1);
 
     // Custom serial printer
-    cerealInit();
+    // cerealInit();
 
     // led GPIOB_Pin_8
     LEDInit();
 
     // open the USB VCP
     serial0 = usbVcpOpen();
+
+    // Open USART1
+    cereal = uartOpen(USART1, NULL, 115200, (MODE_TX|MODE_RX), SERIAL_NOT_INVERTED);
+    setPrintfSerialPort(cereal);
+    printf("printf Configured!\n");
+
+    sensorsAutodetect();
 
 }
 
@@ -156,12 +162,16 @@ void loop() {
     static uint16_t i = 0;
 
     // print
-    cerealProcess(++i);
+    accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
+
+    printf("Current Time: %d\n", ++i);
+    // printf("\t acc.smooth[0]: %d", acc.accSmooth[0]);
+    // printf("\t acc.dev.ADCRaw[0]: %d\n", acc.dev.ADCRaw[0]);
 
     digitalHi(GPIOB, GPIO_Pin_8);   // turn the LED on (HIGH is the voltage level)
-    delay(500);               // wait for a second
+    delay(200);               // wait for a second
     digitalLo(GPIOB, GPIO_Pin_8);    // turn the LED off by making the voltage LOW
-    delay(500);                // wait for a second
+    delay(200);                // wait for a second
 }
 
 // ----------------------------------------------------------------------------

@@ -21,7 +21,6 @@ static bool cerealPortEnabled = false;
 static serialPortConfig_t *portConfig;
 
 extern acc_t acc;
-extern gyro_t gyro;
 
 void cerealInit(void) {
     portConfig = findSerialPortConfig(FUNCTION_CEREAL);
@@ -37,8 +36,8 @@ void cerealProcess(uint32_t currentTime) {
         // serialPrint(cerealPort, "Hi\n");
         // setPrintfSerialPort(cerealPort);
         printf("Current Time: %d", currentTime);
-        printf("\t Acc.smooth[0]: %d", acc.accSmooth[0]);
-        printf("\t gyro.ADC[0]: %f\n", (double)gyro.gyroADCf[0]);
+        printf("\t acc.smooth[0]: %d", acc.accSmooth[0]);
+        printf("\t acc.dev.ADCRaw[0]: %d\n", acc.dev.ADCRaw[0]);
     }
 }
 
