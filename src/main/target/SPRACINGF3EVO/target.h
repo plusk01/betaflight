@@ -27,6 +27,8 @@
 
 // #define BRUSHED_ESC_AUTODETECT
 
+// #define NOMAIN
+
 #define LED0                    PB8
 
 #define USE_EXTI

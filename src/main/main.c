@@ -24,6 +24,7 @@
 
 #include "scheduler/scheduler.h"
 
+#ifndef NOMAIN
 int main(void)
 {
     init();
@@ -31,3 +32,4 @@ int main(void)
         scheduler();
     }
 }
+#endif
