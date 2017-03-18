@@ -97,6 +97,8 @@ static accDev_t accDev;
 static gyroDev_t gyroDev;
 static bool accInited = false;
 
+static motorDevConfig_t motorDev;
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -222,6 +224,28 @@ bool myAccInit() {
     return true;
 }
 
+// ============================================================================
+
+void myResetMotorConfig() {
+    memset(&motorDev, 0, sizeof(motorDev));
+
+    // minthrottle == 1000
+    // maxthrottle == 2000
+    
+    // for some reason these motors need to be at the same rate as BRUSHLESS_MOTORS_PWM_RATE
+    motorDev.motorPwmRate = 480; //BRUSHLESS_MOTORS_PWM_RATE; //16000; //BRUSHED_MOTORS_PWM_RATE;
+    motorDev.motorPwmProtocol = PWM_TYPE_ONESHOT125; //PWM_TYPE_BRUSHED;
+    motorDev.useUnsyncedPwm = true;
+
+
+    int motorIndex = 0;
+    for (int i = 0; i < USABLE_TIMER_CHANNEL_COUNT && motorIndex < MAX_SUPPORTED_MOTORS; i++) {
+        if (timerHardware[i].usageFlags & TIM_USE_MOTOR) {
+            motorDev.ioTags[motorIndex] = timerHardware[i].tag;
+            motorIndex++;
+        }
+    }
+}
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -244,9 +268,9 @@ void setup() {
     // ensureEEPROMContainsValidData();
     // readEEPROM();
 
-    resetConfigs();
+    // resetConfigs();
 
-    ledInit(statusLedConfig());
+    // ledInit(statusLedConfig());
 
     EXTIInit();
 
@@ -255,7 +279,7 @@ void setup() {
     timerInit();  // timer must be initialized before any channel is allocated
 
     // this initializes some structure that helps manage USARTs
-    serialInit(feature(FEATURE_SOFTSERIAL), SERIAL_PORT_NONE);
+    // serialInit(feature(FEATURE_SOFTSERIAL), SERIAL_PORT_NONE);
 
     // For MPU6500
     spiInit(SPIDEV_1);
@@ -284,7 +308,8 @@ void setup() {
     // -----------------------
 
     uint16_t idlePulse = 0; // for brushed
-    motorDevInit(&motorConfig()->dev, idlePulse, 4);
+    myResetMotorConfig();
+    motorDevInit(&motorDev, idlePulse, 4);
 
     printf("Motors Initialized\n");
 
@@ -295,7 +320,7 @@ void setup() {
 // ----------------------------------------------------------------------------
 
 void loop() {
-    static uint16_t i = 1010;
+    static uint16_t i = 1000;
 
     // print
     // accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
@@ -310,11 +335,13 @@ void loop() {
     printf("\t gyro.gyroADCRaw[0]: %d\n", gyroDev.gyroADCRaw[0]);
 
     digitalHi(GPIOB, GPIO_Pin_8);   // turn the LED on (HIGH is the voltage level)
-    delay(200);               // wait for a second
+    delay(500);               // wait for a second
     digitalLo(GPIOB, GPIO_Pin_8);    // turn the LED off by making the voltage LOW
-    delay(200);                // wait for a second
+    delay(500);                // wait for a second
 
-    // pwmWriteMotor(0, i);
+    pwmWriteMotor(0, i);
+
+    if (i>1030) i = 1000;
 }
 
 // ----------------------------------------------------------------------------
