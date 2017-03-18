@@ -238,10 +238,13 @@ void setup() {
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
 
+    // this just checks memory structures at compile time
     // initEEPROM();
 
-    ensureEEPROMContainsValidData();
-    readEEPROM();
+    // ensureEEPROMContainsValidData();
+    // readEEPROM();
+
+    resetConfigs();
 
     ledInit(statusLedConfig());
 
