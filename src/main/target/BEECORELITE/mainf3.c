@@ -26,11 +26,11 @@
 // #include "common/maths.h"
 #include "common/printf.h"
 
-#include "config/config_eeprom.h"
-#include "config/config_profile.h"
-#include "config/feature.h"
+// #include "config/config_eeprom.h"
+// #include "config/config_profile.h"
+// #include "config/feature.h"
 // #include "config/parameter_group.h"
-#include "config/parameter_group_ids.h"
+// #include "config/parameter_group_ids.h"
 
 // #include "drivers/nvic.h"
 // #include "drivers/sensor.h"
@@ -48,7 +48,7 @@
 #include "drivers/accgyro_spi_mpu6500.h"
 // #include "drivers/pwm_esc_detect.h"
 // #include "drivers/rx_pwm.h"
-// #include "drivers/pwm_output.h"
+#include "drivers/pwm_output.h"
 // #include "drivers/adc.h"
 // #include "drivers/bus_i2c.h"
 #include "drivers/bus_spi.h"
@@ -112,7 +112,7 @@ void LEDInit() {
     gpioInit(GPIOB, &cfg);
 }
 
-static const extiConfig_t *selectMPUIntExtiConfig(void)
+static const extiConfig_t *mySelectMPUIntExtiConfig(void)
 {
     static const extiConfig_t mpuIntExtiConfig = { .tag = IO_TAG(MPU_INT_EXTI) };
     return &mpuIntExtiConfig;
@@ -147,7 +147,7 @@ bool myGyroDetect(gyroDev_t *dev) {
 bool myGyroInit(void) {
     memset(&gyroDev, 0, sizeof(gyroDev));
 
-    gyroDev.mpuIntExtiConfig = selectMPUIntExtiConfig();
+    gyroDev.mpuIntExtiConfig = mySelectMPUIntExtiConfig();
     mpuDetect(&gyroDev);
     // mpuResetFn = gyroDev.mpuConfiguration.resetFn;
 
@@ -164,9 +164,9 @@ bool myGyroInit(void) {
     // gyro.targetLooptime = gyroSetSampleRate(&gyroDev, gyroConfig()->gyro_lpf, gyroConfig()->gyro_sync_denom, gyroConfig()->gyro_use_32khz);
     // gyroDev.lpf = gyroConfig()->gyro_lpf;
     gyroDev.init(&gyroDev);
-    if (gyroConfig()->gyro_align != ALIGN_DEFAULT) {
-        gyroDev.gyroAlign = gyroConfig()->gyro_align;
-    }
+    // if (gyroConfig()->gyro_align != ALIGN_DEFAULT) {
+    //     gyroDev.gyroAlign = gyroConfig()->gyro_align;
+    // }
     // gyroInitFilters();
 
     return true;
@@ -217,9 +217,9 @@ bool myAccInit() {
     accDev.acc_1G = 256; // set default
     accDev.init(&accDev); // driver initialisation
 
-    if (accelerometerConfig()->acc_align != ALIGN_DEFAULT) {
-        accDev.accAlign = accelerometerConfig()->acc_align;
-    }
+    // if (accelerometerConfig()->acc_align != ALIGN_DEFAULT) {
+    //     accDev.accAlign = accelerometerConfig()->acc_align;
+    // }
 
     return true;
 }
@@ -231,7 +231,7 @@ void myResetMotorConfig() {
 
     // minthrottle == 1000
     // maxthrottle == 2000
-    
+
     // for some reason these motors need to be at the same rate as BRUSHLESS_MOTORS_PWM_RATE
     motorDev.motorPwmRate = 480; //BRUSHLESS_MOTORS_PWM_RATE; //16000; //BRUSHED_MOTORS_PWM_RATE;
     motorDev.motorPwmProtocol = PWM_TYPE_ONESHOT125; //PWM_TYPE_BRUSHED;
