@@ -240,8 +240,8 @@ void setup() {
 
     // initEEPROM();
 
-    // ensureEEPROMContainsValidData();
-    // readEEPROM();
+    ensureEEPROMContainsValidData();
+    readEEPROM();
 
     ledInit(statusLedConfig());
 
@@ -271,20 +271,28 @@ void setup() {
     setPrintfSerialPort(cereal);
     printf("printf Configured!\n");
 
-    // sensorsAutodetect();
-
     // -----------------------
 
     myGyroInit();
     accInited = myAccInit();
 
+    printf("IMU Initialized\n");
+
+    // -----------------------
+
+    uint16_t idlePulse = 0; // for brushed
+    motorDevInit(&motorConfig()->dev, idlePulse, 4);
+
+    printf("Motors Initialized\n");
+
+    // -----------------------
 }
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 void loop() {
-    static uint16_t i = 0;
+    static uint16_t i = 1010;
 
     // print
     // accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
@@ -302,6 +310,8 @@ void loop() {
     delay(200);               // wait for a second
     digitalLo(GPIOB, GPIO_Pin_8);    // turn the LED off by making the voltage LOW
     delay(200);                // wait for a second
+
+    // pwmWriteMotor(0, i);
 }
 
 // ----------------------------------------------------------------------------

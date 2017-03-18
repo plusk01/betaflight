@@ -32,6 +32,7 @@ void cerealInit(void) {
 }
 
 void cerealProcess(uint32_t currentTime) {
+#if 0
     if (cerealPortEnabled) {
         // serialPrint(cerealPort, "Hi\n");
         // setPrintfSerialPort(cerealPort);
@@ -39,6 +40,7 @@ void cerealProcess(uint32_t currentTime) {
         printf("\t acc.smooth[0]: %d", acc.accSmooth[0]);
         printf("\t acc.dev.ADCRaw[0]: %d\n", acc.dev.ADCRaw[0]);
     }
+#endif
 }
 
 void configureCerealPort(void) {

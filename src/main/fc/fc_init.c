@@ -135,6 +135,9 @@ void init(void)
         idlePulse = 0; // brushed motors
     }
 
+    // Custom serial printer
+    cerealInit();
+
     mixerConfigureOutput();
     motorDevInit(&motorConfig()->dev, idlePulse, getMotorCount());
 
@@ -227,9 +230,6 @@ void init(void)
     failsafeInit();
 
     rxInit();
-
-    // Custom serial printer
-    cerealInit();
 
     if (mixerConfig()->mixerMode == MIXER_GIMBAL) {
         accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
